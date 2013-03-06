@@ -18,7 +18,7 @@ def main():
     global FPSCLOCK, DISPLAYSURF, IMAGESDICT, BASICFONT, PLAYERIMAGES, currentImage
     # Pygame initialization and basic set up of the globalvariables
     pygame.init()
-    FPSCLOCK = pygame.time.Clock()
+    FPSCLOCK = pygame.time.Clock() # Creates an object to keep track of time.
 
     DISPLAYSURF = pygame.display.set_mode((WINWIDTH, WINHEIGHT))
 
@@ -78,9 +78,12 @@ def startScreen():
         # Display the DISPLAYSURF contents to the actual screen.
         pygame.display.update()
         FPSCLOCK.tick()
+
 def terminate():
     pygame.quit()
     sys.exit()
 
+# Checks to see if the file being run is called main, i.e. main.py
+# If so it runs the main() function.
 if __name__ == '__main__':
     main()
