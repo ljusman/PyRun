@@ -1,4 +1,4 @@
-import random, copy, os, pygame, sys
+import random, copy, os, pygame, sys, player
 from pygame.locals import *
 
 FPS = 30 # frames per second to update the screen
@@ -60,14 +60,11 @@ def runGame():
             height: the height of the player image
     '''
     # Initialize the player object
-    playerObj = {
-        'surface': IMAGESDICT['player'],
-        'facing': RIGHT,
-        'x': HALF_WINWIDTH,
-        'y': HALF_WINHEIGHT,
-        'width': 50,
-        'height': 80
-        }
+    p = player.Player(
+        (HALF_WINWIDTH,HALF_WINHEIGHT),
+        (50,80),
+        IMAGESDICT['player']
+        )
 
     moveLeft  = False
     moveRight = False
@@ -78,10 +75,9 @@ def runGame():
 
         # Draw the background
         DISPLAYSURF.fill(BGCOLOR)
-        
+
         # Draw the player
-        playerObj['rect'] = pygame.Rect((playerObj['x'] , playerObj['y'] , playerObj['width'], playerObj['height']))
-        DISPLAYSURF.blit(playerObj['surface'], playerObj['rect'])
+        DISPLAYSURF.blit(p.image, p.get_rect())
 
         # This loop will handle all of the player input events
         for event in pygame.event.get():
@@ -98,15 +94,9 @@ def runGame():
                 elif event.key in (K_LEFT, K_a):
                     moveRight = False
                     moveLeft = True
-                    if playerObj['facing'] != LEFT: # change player image
-                        playerObj['surface'] = pygame.transform.flip(playerObj['surface'], True, False)
-                    playerObj['facing'] = LEFT
                 elif event.key in (K_RIGHT, K_d):
                     moveLeft = False
                     moveRight = True
-                    if playerObj['facing'] != RIGHT: # change player image
-                        playerObj['surface'] = pygame.transform.flip(playerObj['surface'], True, False)
-                    playerObj['facing'] = RIGHT
 
             elif event.type == KEYUP:
                 # stop moving the player
@@ -123,17 +113,13 @@ def runGame():
 
         # actually move the player
         if moveLeft:
-            playerObj['x'] -= MOVERATE
-            print('Moving player left')
+            p.x -= MOVERATE
         if moveRight:
-            playerObj['x'] += MOVERATE
-            print('Moving player right')
+            p.x += MOVERATE
         if moveUp:
-            playerObj['y'] -= MOVERATE
-            print('Moving player up')
+            p.y -= MOVERATE
         if moveDown:
-            playerObj['y'] += MOVERATE
-            print('Moving player down')      
+            p.y += MOVERATE   
     
         pygame.display.update()
         FPSCLOCK.tick()
@@ -180,13 +166,6 @@ def startScreen():
         # Display the DISPLAYSURF contents to the actual screen.
         pygame.display.update()
         FPSCLOCK.tick()
-
-def readLevelsFile(filename):
-    assert os.path.exists(filename), 'Cannot find the level file: %s' % (filename)
-    mapFile = open(filename, 'r')
-    # Each level must end with a blank line
-    content = mapFile.readlines() + ['\r\n']
-    mapFile.close()
 
 def terminate():
     pygame.quit()
