@@ -1,22 +1,6 @@
 import random, copy, os, pygame, sys, player, AI
+import constants as CONST
 from pygame.locals import *
-
-FPS = 30 # frames per second to update the screen
-WINWIDTH = 800 # width of the program's window, in pixels
-WINHEIGHT = 600 # height in pixels
-MOVERATE = 0.5 # How fast the player moves
-HALF_WINWIDTH = int(WINWIDTH / 2)
-HALF_WINHEIGHT = int(WINHEIGHT / 2)
-
-CAM_MOVE_SPEED = 5 # how many pixels per frame the camera moves
-
-BRIGHTBLUE  = (  0, 170, 255)
-WHITE       = (255, 255, 255)
-BGCOLOR     = BRIGHTBLUE
-TEXTCOLOR   = WHITE
-
-LEFT    = 'left'
-RIGHT   = 'right'
 
 JUMPING_DURATION = 500      # milliseconds
 HORZ_MOVE_INCREMENT = 4     # pixels
@@ -47,7 +31,7 @@ def main():
     pygame.init()
     FPSCLOCK = pygame.time.Clock() # Creates an object to keep track of time.
 
-    DISPLAYSURF = pygame.display.set_mode((WINWIDTH, WINHEIGHT))
+    DISPLAYSURF = pygame.display.set_mode((CONST.WINWIDTH, CONST.WINHEIGHT))
 
     pygame.display.set_caption('PyRun')
     BASICFONT = pygame.font.Font('freesansbold.ttf',18)
@@ -65,11 +49,14 @@ def main():
     currentImage = 0
     # PLAYERIMAGES = [IMAGESDICT['princess']]
     
+    
+
     startScreen() # function which shows the start menu
 
     runGame()
 
 def runGame():
+
 
     ''' set up initial player object
         This object contains the following keys:
@@ -82,7 +69,7 @@ def runGame():
     '''
     # Initialize the player object
     p = player.Player(
-        (HALF_WINWIDTH,HALF_WINHEIGHT),
+        (CONST.HALF_WINWIDTH,CONST.HALF_WINHEIGHT),
         (30,80),
         IMAGESDICT['player']
         )
@@ -149,9 +136,9 @@ def runGame():
         
         # actually move the player
         if moveLeft:
-            p.x -= MOVERATE
+            p.x -= CONST.MOVERATE
         if moveRight:
-            p.x += MOVERATE
+            p.x += CONST.MOVERATE
         if moveUp:
             if not jumping:
                 jumping = True
@@ -166,7 +153,7 @@ def runGame():
         
 
         # Draw the background
-        DISPLAYSURF.fill(BGCOLOR)
+        DISPLAYSURF.fill(CONST.BGCOLOR)
 
         # Draw the player
         DISPLAYSURF.blit(p.image, p.get_rect())
@@ -183,7 +170,7 @@ def startScreen():
     titleRect = IMAGESDICT['title'].get_rect()
     topCoord = 50 # topCoord track where to position the top of the text
     titleRect.top = topCoord
-    titleRect.centerx = HALF_WINWIDTH
+    titleRect.centerx = CONST.HALF_WINWIDTH
     topCoord += titleRect.height
 
     # Unfortunately Pygame's font and text system only show one line at
@@ -193,18 +180,18 @@ def startScreen():
                         'Esc to quit.']
 
     # Star with drawing a black color to the entire window
-    DISPLAYSURF.fill(BGCOLOR)
+    DISPLAYSURF.fill(CONST.BGCOLOR)
 
     #Draw the title image to the window:
     DISPLAYSURF.blit(IMAGESDICT['title'], titleRect)
 
     # Position and draw the text.
     for i in range(len(instructionText)):
-        instSurf = BASICFONT.render(instructionText[i], 1, TEXTCOLOR)
+        instSurf = BASICFONT.render(instructionText[i], 1, CONST.TEXTCOLOR)
         instRect = instSurf.get_rect()
         topCoord += 10 # 10 pixels will go in between each line of text.
         instRect.top = topCoord
-        instRect.centerx = HALF_WINWIDTH
+        instRect.centerx = CONST.HALF_WINWIDTH
         topCoord += instRect.height # Adjust for the height of the line.
         DISPLAYSURF.blit(instSurf, instRect)
 

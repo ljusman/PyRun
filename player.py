@@ -1,4 +1,4 @@
-import random, copy, os, pygame, sys
+import random, copy, os, pygame, sys, constants
 from pygame.locals import *
 
 class Player:
@@ -19,5 +19,16 @@ class Player:
         self.width = size[0]
         self.height = size[1]
 
+        self.onGround = True
+
     def get_rect(self):
         return pygame.Rect((self.x, self.y, self.width, self.height))
+
+    def get_x_tiles(self):
+        '''
+            Gets the horizonal tile rows which the player character intersects with
+        '''
+        topRange = self.y % TILE_SIZE
+        bottomRange = (self.y - self.height) % TILE_SIZE
+
+        return (topRange, bottomRange)
