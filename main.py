@@ -1,9 +1,10 @@
-import random, copy, os, pygame, sys
+import random, copy, os, pygame, sys, player
 from pygame.locals import *
 
 FPS = 30 # frames per second to update the screen
 WINWIDTH = 800 # width of the program's window, in pixels
 WINHEIGHT = 600 # height in pixels
+MOVERATE = 4 # How fast the player moves
 HALF_WINWIDTH = int(WINWIDTH / 2)
 HALF_WINHEIGHT = int(WINHEIGHT / 2)
 
@@ -13,6 +14,9 @@ BRIGHTBLUE  = (  0, 170, 255)
 WHITE       = (255, 255, 255)
 BGCOLOR     = BRIGHTBLUE
 TEXTCOLOR   = WHITE
+
+LEFT    = 'left'
+RIGHT   = 'right'
 
 def main():
     global FPSCLOCK, DISPLAYSURF, IMAGESDICT, BASICFONT, PLAYERIMAGES, currentImage
@@ -27,14 +31,98 @@ def main():
 
     # This is a global Dict object (or dictionary object) which
     # contains all of the images that we will use in the game
-    IMAGESDICT = {'title': pygame.image.load('title.png')}
+    IMAGESDICT = {
+        'title': pygame.image.load('title.png'),
+        'player': pygame.image.load('princess.png')
+        }
 
     # PLAYERIMAGES is a list of all possible characters the player can be.
     # currentImage is the index of the player's current player image.
     currentImage = 0
     # PLAYERIMAGES = [IMAGESDICT['princess']]
     
+    
+
     startScreen() # function which shows the start menu
+
+    runGame()
+
+def runGame():
+
+
+    ''' set up initial player object
+        This object contains the following keys:
+            surface: the image of the player
+            facing: the direction the player is facing
+            x: the left edge coordinate of the player on the window
+            y: the top edge coordinate of the player on the window
+            width: the width of the player image
+            height: the height of the player image
+    '''
+    # Initialize the player object
+    p = player.Player(
+        (HALF_WINWIDTH,HALF_WINHEIGHT),
+        (50,80),
+        IMAGESDICT['player']
+        )
+
+    moveLeft  = False
+    moveRight = False
+    moveUp    = False
+    moveDown  = False
+
+    while True: # main game loop
+
+        # Draw the background
+        DISPLAYSURF.fill(BGCOLOR)
+
+        # Draw the player
+        DISPLAYSURF.blit(p.image, p.get_rect())
+
+        # This loop will handle all of the player input events
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                terminate()
+
+            elif event.type == KEYDOWN:
+                if event.key in (K_UP, K_w):
+                    moveDown = False
+                    moveUp = True
+                elif event.key in (K_DOWN, K_s):
+                    moveUp = False
+                    moveDown = True
+                elif event.key in (K_LEFT, K_a):
+                    moveRight = False
+                    moveLeft = True
+                elif event.key in (K_RIGHT, K_d):
+                    moveLeft = False
+                    moveRight = True
+
+            elif event.type == KEYUP:
+                # stop moving the player
+                if event.key in (K_LEFT, K_a):
+                    moveLeft = False
+                elif event.key in (K_RIGHT, K_d):
+                    moveRight = False
+                elif event.key in (K_UP, K_w):
+                    moveUp = False
+                elif event.key in (K_DOWN, K_s):
+                    moveDown = False            
+                elif event.key == K_ESCAPE:
+                        terminate()
+
+        # actually move the player
+        if moveLeft:
+            p.x -= MOVERATE
+        if moveRight:
+            p.x += MOVERATE
+        if moveUp:
+            p.y -= MOVERATE
+        if moveDown:
+            p.y += MOVERATE   
+    
+        pygame.display.update()
+        FPSCLOCK.tick()
 
 def startScreen():
     # Position the title image.
