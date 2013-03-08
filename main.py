@@ -4,7 +4,7 @@ from pygame.locals import *
 FPS = 30 # frames per second to update the screen
 WINWIDTH = 800 # width of the program's window, in pixels
 WINHEIGHT = 600 # height in pixels
-MOVERATE = 4 # How fast the player moves
+MOVERATE = 1 # How fast the player moves
 HALF_WINWIDTH = int(WINWIDTH / 2)
 HALF_WINHEIGHT = int(WINHEIGHT / 2)
 
