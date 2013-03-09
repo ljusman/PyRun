@@ -4,7 +4,7 @@ from pygame.locals import *
 FPS = 30 # frames per second to update the screen
 WINWIDTH = 800 # width of the program's window, in pixels
 WINHEIGHT = 600 # height in pixels
-MOVERATE = 1 # How fast the player moves
+MOVERATE = 0.5 # How fast the player moves
 HALF_WINWIDTH = int(WINWIDTH / 2)
 HALF_WINHEIGHT = int(WINHEIGHT / 2)
 
@@ -17,6 +17,20 @@ TEXTCOLOR   = WHITE
 
 LEFT    = 'left'
 RIGHT   = 'right'
+
+JUMPING_DURATION = 500      # milliseconds
+HORZ_MOVE_INCREMENT = 4     # pixels
+TIME_AT_PEAK = JUMPING_DURATION / 2
+JUMP_HEIGHT = 200           # pixels
+
+def floorY():
+    ''' The Y coordinate of the floor, where the man is placed '''
+    return WINHEIGHT - HALF_WINHEIGHT
+
+def jumpHeightAtTime(elapsedTime):
+    ''' The height of the jump at the given elapsed time (milliseconds) '''
+    return ((-1.0/TIME_AT_PEAK**2)* \
+        ((elapsedTime-TIME_AT_PEAK)**2)+1)*JUMP_HEIGHT
 
 def main():
     global FPSCLOCK, DISPLAYSURF, IMAGESDICT, BASICFONT, PLAYERIMAGES, currentImage
@@ -41,14 +55,11 @@ def main():
     currentImage = 0
     # PLAYERIMAGES = [IMAGESDICT['princess']]
     
-    
-
     startScreen() # function which shows the start menu
 
     runGame()
 
 def runGame():
-
 
     ''' set up initial player object
         This object contains the following keys:
@@ -70,14 +81,10 @@ def runGame():
     moveRight = False
     moveUp    = False
     moveDown  = False
-
+	
+    jumping = False
+	
     while True: # main game loop
-
-        # Draw the background
-        DISPLAYSURF.fill(BGCOLOR)
-
-        # Draw the player
-        DISPLAYSURF.blit(p.image, p.get_rect())
 
         # This loop will handle all of the player input events
         for event in pygame.event.get():
@@ -85,7 +92,7 @@ def runGame():
                 terminate()
 
             elif event.type == KEYDOWN:
-                if event.key in (K_UP, K_w):
+                if event.key in (K_UP, K_w, K_SPACE):
                     moveDown = False
                     moveUp = True
                 elif event.key in (K_DOWN, K_s):
@@ -104,22 +111,40 @@ def runGame():
                     moveLeft = False
                 elif event.key in (K_RIGHT, K_d):
                     moveRight = False
-                elif event.key in (K_UP, K_w):
+                elif event.key in (K_UP, K_w, K_SPACE):
                     moveUp = False
                 elif event.key in (K_DOWN, K_s):
                     moveDown = False            
                 elif event.key == K_ESCAPE:
                         terminate()
 
+        if jumping:
+            t = pygame.time.get_ticks() - jumpingStart
+            if t > JUMPING_DURATION:
+                jumping = False
+                jumpHeight = 0
+            else:
+                jumpHeight = jumpHeightAtTime(t)
+            p.y = floorY() - jumpHeight
+        
         # actually move the player
         if moveLeft:
             p.x -= MOVERATE
         if moveRight:
             p.x += MOVERATE
         if moveUp:
-            p.y -= MOVERATE
+            if not jumping:
+                jumping = True
+                jumpingStart = pygame.time.get_ticks()
         if moveDown:
-            p.y += MOVERATE   
+            #p.y += MOVERATE
+            pass
+
+        # Draw the background
+        DISPLAYSURF.fill(BGCOLOR)
+
+        # Draw the player
+        DISPLAYSURF.blit(p.image, p.get_rect())
     
         pygame.display.update()
         FPSCLOCK.tick()

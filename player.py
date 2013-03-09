@@ -9,7 +9,7 @@ class Player:
 
         Both the size and pos paramaters must be ordered pairs. 
         e.g. (0,0), (50,50), etc
-    '''
+    '''	
     def __init__(self,pos,size,image):
         self.image = image
         self.facing = 'right'
