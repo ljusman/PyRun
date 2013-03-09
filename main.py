@@ -32,8 +32,8 @@ def main():
     # This is a global Dict object (or dictionary object) which
     # contains all of the images that we will use in the game
     IMAGESDICT = {
-        'title': pygame.image.load('title.png'),
-        'player': pygame.image.load('princess.png')
+        'title': pygame.image.load('img/title.png'),
+        'player': pygame.image.load('img/princess.png')
         }
 
     # PLAYERIMAGES is a list of all possible characters the player can be.
