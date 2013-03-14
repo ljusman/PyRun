@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="32" height="24" tilewidth="25" tileheight="25">
+ <tileset firstgid="1" name="Air" tilewidth="25" tileheight="25">
+  <image source="air.png" width="25" height="25"/>
+ </tileset>
+ <tileset firstgid="2" name="ground" tilewidth="25" tileheight="25">
+  <image source="ground.png" width="25" height="25"/>
+ </tileset>
+ <tileset firstgid="3" name="collision" tilewidth="25" tileheight="25">
+  <image source="../../../Dropbox/CMPT 106/tiledtmxloader-3.0.3.114/examples/graphics/tiles/collision.png" width="64" height="32"/>
+ </tileset>
+ <layer name="Background" width="32" height="24">
+  <data encoding="base64" compression="zlib">
+   eJztwwENAAAMw6DOv+kLOSSsmqqq+uIBEw4DAQ==
+  </data>
+ </layer>
+ <layer name="Collision" width="32" height="24">
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFo2AUjIJRMApGwSgYBaNgFFALMCFhQvIDgQEgKABH
+  </data>
+ </layer>
+</map>

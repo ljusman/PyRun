@@ -93,6 +93,31 @@ def runGame():
 	
     while True: # main game loop
 
+        # Draw the background
+        DISPLAYSURF.fill(CONST.BGCOLOR)
+
+        # parse the level map
+        level_map = tiledtmxloader.tmxreader.TileMapParser().parse_decode('textlevel.tmx')
+
+        # load the images using pygame
+        resources - tiledtmxloader.helperspygame.ResourceLoaderPygame()
+        resources.load(level_map)
+
+        # prepare map rendering
+        assert level_map.orientation == "orthogonal"
+
+        # renderer
+        renderer = tiledtmxloader.helperspygame.RendererPygame()
+
+        # retrieve the layers
+        sprite_layers = tiledtmxloader.helperspygame.get_layers_from_map(resources)
+
+        # filter layers
+        sprite_layers = [layer for layer in sprite_layers if not layer.is_object_group]
+        
+        # Draw the player
+        DISPLAYSURF.blit(p.image, p.get_rect())
+
         # This loop will handle all of the player input events
         for event in pygame.event.get():
             if event.type == QUIT:
