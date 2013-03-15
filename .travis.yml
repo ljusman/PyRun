@@ -2,6 +2,8 @@ language: python
 python:
   - "2.7"
 # command to install dependencies
-install: "sudo apt-get install python-pygame"
+install: 
+	- sudo apt-get update
+ 	- sudo apt-get install python-pygame
 # command to run tests
 script: nosetests
