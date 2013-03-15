@@ -19,7 +19,7 @@ class Player:
         self.width = size[0]
         self.height = size[1]
 
-        self.onGround = True
+        self.onGround = False
 
     def get_rect(self):
         return pygame.Rect((self.x, self.y, self.width, self.height))
