@@ -36,7 +36,18 @@ class Obstacle:
             return True            
         return False
 
-	
+# Stationary obstacles
+class stationaryObstacle(Obstacle):
+    
+    def __init__(self,pos,size,image):
+        return Obstacle.__init__(self, pos, size, image)
+
+class spikes(stationaryObstacle):
+    
+    def __init__(self,pos,size,image):
+        return stationaryObstacle.__init__(self, pos, size, image)
+
+# Obstacles capable of moving
 class movingObstacle(Obstacle):
 
     def __init__(self,pos,size,image):
@@ -60,6 +71,10 @@ class soccerBall(movingObstacle):
         self.rotation = 0
         return movingObstacle.__init__(self, pos, size, image)
 
+    '''
+        Rotate the soccer ball every certain amount of degree specified,
+        depending on what direction the soccer ball is currently moving.
+    '''        
     def soccerBallRotate(self, rotateIncrement):
         if self.soccerMoveMode == 'left':
             self.rotation += 1
