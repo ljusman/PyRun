@@ -1,3 +1,0 @@
-sdl-config
-smpeg-config
-pygame
