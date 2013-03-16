@@ -25,9 +25,9 @@ JUMP_HEIGHT = 200           # pixels
 
 
 # Here is the place to define constants for AI implementation...
-SOCCER_BALL_POSITION = ((WINWIDTH - 100), HALF_WINHEIGHT - 100)
+SOCCER_BALL_POSITION = ((WINWIDTH - 100), HALF_WINHEIGHT - 300)
 SOCCER_BALL_SIZE = (16, 16)
-SOCCER_GRAVITY = 0.02
+SOCCER_GRAVITY = 0.01
 SOCCER_FLOOR_ADJUSTMENT_FACTOR = 2.6
 SOCCER_ROTATE_INCREMENT = 2
 aiMoveStarted = False
@@ -94,7 +94,7 @@ def runGame():
         SOCCER_BALL_POSITION,
         SOCCER_BALL_SIZE,
         IMGSCALE,
-        'left'
+        LEFT
         )    
 
     moveLeft  = False
