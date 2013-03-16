@@ -1,4 +1,4 @@
-import random, copy, os, pygame, sys, player
+import random, copy, os, pygame, sys, player, AI
 from pygame.locals import *
 
 FPS = 30 # frames per second to update the screen
@@ -22,6 +22,15 @@ JUMPING_DURATION = 500      # milliseconds
 HORZ_MOVE_INCREMENT = 4     # pixels
 TIME_AT_PEAK = JUMPING_DURATION / 2
 JUMP_HEIGHT = 200           # pixels
+
+
+# Here is the place to define constants for AI implementation...
+SOCCER_BALL_POSITION = ((WINWIDTH - 100), HALF_WINHEIGHT - 100)
+SOCCER_BALL_SIZE = (16, 16)
+SOCCER_GRAVITY = 0.02
+SOCCER_FLOOR_ADJUSTMENT_FACTOR = 2.6
+SOCCER_ROTATE_INCREMENT = 2
+aiMoveStarted = False
 
 def floorY():
     ''' The Y coordinate of the floor, where the man is placed '''
@@ -47,8 +56,9 @@ def main():
     # contains all of the images that we will use in the game
     IMAGESDICT = {
         'title': pygame.image.load('img/title.png'),
-        'player': pygame.image.load('img/princess.png')
-        }
+        'player': pygame.image.load('img/princess.png'),
+        'soccerAI': pygame.image.load('img/soccer_ball.png')
+        }    
 
     # PLAYERIMAGES is a list of all possible characters the player can be.
     # currentImage is the index of the player's current player image.
@@ -73,16 +83,26 @@ def runGame():
     # Initialize the player object
     p = player.Player(
         (HALF_WINWIDTH,HALF_WINHEIGHT),
-        (50,80),
+        (30,80),
         IMAGESDICT['player']
         )
+
+    IMGSCALE = pygame.transform.scale(IMAGESDICT['soccerAI'], SOCCER_BALL_SIZE)
+
+    # Initialize the AI object
+    soccerBall = AI.soccerBall(        
+        SOCCER_BALL_POSITION,
+        SOCCER_BALL_SIZE,
+        IMGSCALE,
+        'left'
+        )    
 
     moveLeft  = False
     moveRight = False
     moveUp    = False
     moveDown  = False
 	
-    jumping = False
+    jumping = False    
 	
     while True: # main game loop
 
@@ -140,11 +160,20 @@ def runGame():
             #p.y += MOVERATE
             pass
 
+        # Preliminaries of soccer ball AI
+        soccerBall.doSoccerBallAction(p, floorY() + (p.height/SOCCER_FLOOR_ADJUSTMENT_FACTOR), SOCCER_GRAVITY, WINWIDTH)
+        ##################################
+        
+
         # Draw the background
         DISPLAYSURF.fill(BGCOLOR)
 
         # Draw the player
         DISPLAYSURF.blit(p.image, p.get_rect())
+
+        # Draw the soccer ball AI
+        SOCCER_IMG_ROT = pygame.transform.rotate(soccerBall.image, soccerBall.soccerBallRotate(SOCCER_ROTATE_INCREMENT))
+        DISPLAYSURF.blit(SOCCER_IMG_ROT, soccerBall.get_rect())
     
         pygame.display.update()
         FPSCLOCK.tick()
