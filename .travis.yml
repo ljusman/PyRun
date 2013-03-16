@@ -1,7 +1,12 @@
 language: python
 python:
   - "2.7"
+# enable system-site-packages so travis can see the apt packages
+virtualenv:
+ system_site_packages: true
 # command to install dependencies
-install: "sudo apt-get update && sudo apt-get install python-pygame"
+before_install: 
+ - sudo apt-get update -qq
+ - sudo apt-get install python-pygame
 # command to run tests
 script: nosetests
