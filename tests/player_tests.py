@@ -7,7 +7,7 @@ def test_init():
 	# Player requires an image, so loading the current player image
 	# TODO: make this load any image so that it doesn't fail
 	#       whenever we change the name of the image.
-	p = player.Player((1,2),(3,4),pygame.image.load('princess.png'))
+	p = player.Player((1,2),(3,4),pygame.image.load('img/princess.png'))
 
 	assert_equal(p.x, 1)
 	assert_equal(p.y, 2)
@@ -18,7 +18,7 @@ def test_init():
 	Tests that get_rect() returns a proper pygame.rect obect
 '''
 def test_get_rect():
-	p = player.Player((1,2),(10,10),pygame.image.load('princess.png'))
+	p = player.Player((1,2),(10,10),pygame.image.load('img/princess.png'))
 
 	rect = p.get_rect()
 

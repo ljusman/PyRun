@@ -1,4 +1,4 @@
-import random, copy, os, pygame, sys, constants
+import random, copy, os, pygame, sys, constants, tiledtmxloader
 from pygame.locals import *
 
 class Player:
@@ -20,9 +20,16 @@ class Player:
         self.height = size[1]
 
         self.onGround = False
+        self.jumping = False
+
+    def isJumping(self):
+        return self.jumping
 
     def get_rect(self):
         return pygame.Rect((self.x, self.y, self.width, self.height))
+
+    def get_sprite(self):
+        return tiledtmxloader.helperspygame.SpriteLayer.Sprite(self.image, self.get_rect())
 
     def get_x_tiles(self):
         '''

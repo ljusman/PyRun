@@ -1,12 +1,33 @@
-import random, copy, os, pygame, sys, player, AI
-import constants as CONST
+import random, copy, os, pygame, sys, player, AI, tiledtmxloader
 from pygame.locals import *
+
+FPS = 30 # frames per second to update the SCREEN
+WINWIDTH = 800 # width of the program's window, in pixels
+WINHEIGHT = 600 # height in pixels
+MOVERATE = 4 # How fast the player moves
+HALF_WINWIDTH = int(WINWIDTH / 2)
+HALF_WINHEIGHT = int(WINHEIGHT / 2)
+
+CAM_MOVE_SPEED = 5 # how many pixels per frame the camera moves
+
+BRIGHTBLUE  = (  0, 170, 255)
+WHITE       = (255, 255, 255)
+BGCOLOR     = BRIGHTBLUE
+TEXTCOLOR   = WHITE
+
+LEFT    = 'left'
+RIGHT   = 'right'
+
+TILEMAP_WIDTH = 32
+TILEMAP_LENGTH = 24
+TILE_SIZE = 25
+
+COLL_LAYER = 2 # The sprite layer which contains the collision map
 
 JUMPING_DURATION = 500      # milliseconds
 HORZ_MOVE_INCREMENT = 4     # pixels
 TIME_AT_PEAK = JUMPING_DURATION / 2
 JUMP_HEIGHT = 200           # pixels
-
 
 # Here is the place to define constants for AI implementation...
 SOCCER_BALL_POSITION = ((WINWIDTH - 100), HALF_WINHEIGHT - 100)
@@ -26,12 +47,12 @@ def jumpHeightAtTime(elapsedTime):
         ((elapsedTime-TIME_AT_PEAK)**2)+1)*JUMP_HEIGHT
 
 def main():
-    global FPSCLOCK, DISPLAYSURF, IMAGESDICT, BASICFONT, PLAYERIMAGES, currentImage
+    global FPSCLOCK, SCREEN, IMAGESDICT, BASICFONT, PLAYERIMAGES, currentImage
     # Pygame initialization and basic set up of the globalvariables
     pygame.init()
     FPSCLOCK = pygame.time.Clock() # Creates an object to keep track of time.
 
-    DISPLAYSURF = pygame.display.set_mode((CONST.WINWIDTH, CONST.WINHEIGHT))
+    SCREEN = pygame.display.set_mode((WINWIDTH, WINHEIGHT))
 
     pygame.display.set_caption('PyRun')
     BASICFONT = pygame.font.Font('freesansbold.ttf',18)
@@ -69,18 +90,18 @@ def runGame():
     '''
     # Initialize the player object
     p = player.Player(
-        (CONST.HALF_WINWIDTH,CONST.HALF_WINHEIGHT),
+        (HALF_WINWIDTH,HALF_WINHEIGHT),
         (30,80),
         IMAGESDICT['player']
         )
 
-    IMGSCALE = pygame.transform.scale(IMAGESDICT['soccerAI'], SOCCER_BALL_SIZE)
+    ballImage = pygame.transform.scale(IMAGESDICT['soccerAI'], SOCCER_BALL_SIZE)
 
     # Initialize the AI object
     soccerBall = AI.soccerBall(        
         SOCCER_BALL_POSITION,
         SOCCER_BALL_SIZE,
-        IMGSCALE,
+        ballImage,
         'left'
         )    
 
@@ -89,18 +110,13 @@ def runGame():
     moveUp    = False
     moveDown  = False
 	
-    jumping = False    
-	
     while True: # main game loop
 
-        # Draw the background
-        DISPLAYSURF.fill(CONST.BGCOLOR)
-
         # parse the level map
-        level_map = tiledtmxloader.tmxreader.TileMapParser().parse_decode('textlevel.tmx')
+        level_map = tiledtmxloader.tmxreader.TileMapParser().parse_decode('testlevel.tmx')
 
         # load the images using pygame
-        resources - tiledtmxloader.helperspygame.ResourceLoaderPygame()
+        resources = tiledtmxloader.helperspygame.ResourceLoaderPygame()
         resources.load(level_map)
 
         # prepare map rendering
@@ -114,9 +130,15 @@ def runGame():
 
         # filter layers
         sprite_layers = [layer for layer in sprite_layers if not layer.is_object_group]
-        
-        # Draw the player
-        DISPLAYSURF.blit(p.image, p.get_rect())
+
+        # add player to the right layer
+        sprite_layers[1].add_sprite(p.get_sprite())
+
+        cam_x = HALF_WINWIDTH
+        cam_y = HALF_WINHEIGHT
+
+        # set initial cam position and size
+        renderer.set_camera_position_and_size(cam_x, cam_y,WINWIDTH, WINHEIGHT)
 
         # This loop will handle all of the player input events
         for event in pygame.event.get():
@@ -150,10 +172,10 @@ def runGame():
                 elif event.key == K_ESCAPE:
                         terminate()
 
-        if jumping:
+        if p.isJumping():
             t = pygame.time.get_ticks() - jumpingStart
             if t > JUMPING_DURATION:
-                jumping = False
+                p.jumping = False
                 jumpHeight = 0
             else:
                 jumpHeight = jumpHeightAtTime(t)
@@ -161,32 +183,47 @@ def runGame():
         
         # actually move the player
         if moveLeft:
-            p.x -= CONST.MOVERATE
+            p.x -= MOVERATE
         if moveRight:
-            p.x += CONST.MOVERATE
+            p.x += MOVERATE
         if moveUp:
-            if not jumping:
-                jumping = True
+            if not p.isJumping():
+                p.jumping = True
                 jumpingStart = pygame.time.get_ticks()
         if moveDown:
             #p.y += MOVERATE
             pass
 
+        step_y = MOVERATE
+
+        step_y = check_collision(p,step_y,sprite_layers[COLL_LAYER])
+
         # Preliminaries of soccer ball AI
         soccerBall.doSoccerBallAction(p, floorY() + (p.height/SOCCER_FLOOR_ADJUSTMENT_FACTOR), SOCCER_GRAVITY, WINWIDTH)
         ##################################
         
+        renderer.set_camera_position(HALF_WINWIDTH, HALF_WINHEIGHT)
 
         # Draw the background
-        DISPLAYSURF.fill(CONST.BGCOLOR)
+        #SCREEN.fill(BGCOLOR)
+        SCREEN.fill((0, 0, 0))
 
         # Draw the player
-        DISPLAYSURF.blit(p.image, p.get_rect())
+        SCREEN.blit(p.image, p.get_rect())
 
         # Draw the soccer ball AI
         SOCCER_IMG_ROT = pygame.transform.rotate(soccerBall.image, soccerBall.soccerBallRotate(SOCCER_ROTATE_INCREMENT))
-        DISPLAYSURF.blit(SOCCER_IMG_ROT, soccerBall.get_rect())
-    
+        SCREEN.blit(SOCCER_IMG_ROT, soccerBall.get_rect())
+        
+        # render the map
+        for sprite_layer in sprite_layers:
+            if sprite_layer.is_object_group:
+                # we dont draw the object group layers
+                # you should filter them out if not needed
+                continue
+            else:
+                renderer.render_layer(SCREEN, sprite_layer)
+
         pygame.display.update()
         FPSCLOCK.tick()
 
@@ -195,7 +232,7 @@ def startScreen():
     titleRect = IMAGESDICT['title'].get_rect()
     topCoord = 50 # topCoord track where to position the top of the text
     titleRect.top = topCoord
-    titleRect.centerx = CONST.HALF_WINWIDTH
+    titleRect.centerx = HALF_WINWIDTH
     topCoord += titleRect.height
 
     # Unfortunately Pygame's font and text system only show one line at
@@ -205,20 +242,20 @@ def startScreen():
                         'Esc to quit.']
 
     # Star with drawing a black color to the entire window
-    DISPLAYSURF.fill(CONST.BGCOLOR)
+    SCREEN.fill(BGCOLOR)
 
     #Draw the title image to the window:
-    DISPLAYSURF.blit(IMAGESDICT['title'], titleRect)
+    SCREEN.blit(IMAGESDICT['title'], titleRect)
 
     # Position and draw the text.
     for i in range(len(instructionText)):
-        instSurf = BASICFONT.render(instructionText[i], 1, CONST.TEXTCOLOR)
+        instSurf = BASICFONT.render(instructionText[i], 1, TEXTCOLOR)
         instRect = instSurf.get_rect()
         topCoord += 10 # 10 pixels will go in between each line of text.
         instRect.top = topCoord
-        instRect.centerx = CONST.HALF_WINWIDTH
+        instRect.centerx = HALF_WINWIDTH
         topCoord += instRect.height # Adjust for the height of the line.
-        DISPLAYSURF.blit(instSurf, instRect)
+        SCREEN.blit(instSurf, instRect)
 
     while True: # Main loop for the start screen.
         for event in pygame.event.get():
@@ -229,7 +266,7 @@ def startScreen():
                     terminate()
                 return # user has pressed a key, so return.
 
-        # Display the DISPLAYSURF contents to the actual screen.
+        # Display the screen contents to the actual screen.
         pygame.display.update()
         FPSCLOCK.tick()
 
