@@ -1,4 +1,4 @@
-import random, copy, os, pygame, sys, player, AI, tiledtmxloader
+import random, copy, math, os, pygame, sys, player, AI, tiledtmxloader
 from pygame.locals import *
 
 FPS = 30 # frames per second to update the SCREEN
@@ -194,9 +194,11 @@ def runGame():
             #p.y += MOVERATE
             pass
 
-        step_y = MOVERATE
+        # this should simulate constant gravity
+        #step_y = MOVERATE
 
-        step_y = check_collision(p,step_y,sprite_layers[COLL_LAYER])
+        step_y = check_collision(p,10,sprite_layers[COLL_LAYER])
+        p.y += step_y
 
         # Preliminaries of soccer ball AI
         soccerBall.doSoccerBallAction(p, floorY() + (p.height/SOCCER_FLOOR_ADJUSTMENT_FACTOR), SOCCER_GRAVITY, WINWIDTH)
@@ -205,7 +207,6 @@ def runGame():
         renderer.set_camera_position(HALF_WINWIDTH, HALF_WINHEIGHT)
 
         # Draw the background
-        #SCREEN.fill(BGCOLOR)
         SCREEN.fill((0, 0, 0))
 
         # Draw the player
@@ -269,6 +270,50 @@ def startScreen():
         # Display the screen contents to the actual screen.
         pygame.display.update()
         FPSCLOCK.tick()
+
+def check_collision(player,step_y,coll_layer):
+    # find the tile location of the player
+    tile_x = int((player.x) // coll_layer.tilewidth)
+    tile_y = int((player.y) // coll_layer.tileheight)
+
+    # find the tiles around the hero and extract their rects for collision
+    tile_rects = []
+    for diry in (-1,0, 1):
+        for dirx in (-1,0,1):
+            if coll_layer.content2D[tile_y + diry][tile_x + dirx] is not None:
+                tile_rects.append(coll_layer.content2D[tile_y + diry][tile_x + dirx].rect)
+
+    # save the original steps and return them if not canceled
+    #res_step_x = step_x
+    res_step_y = step_y
+
+    # y direction, floor or ceil depending on the sign of the step
+    #step_y = special_round(step_y)
+
+    # detect a collision and dont move in y direction if colliding
+    if player.get_rect().move(0, step_y).collidelist(tile_rects) > -1:
+        print 'Collision Detected'
+        res_step_y = 0
+
+    # return the step the hero should do
+    return res_step_y
+
+def special_round(value):
+    """
+    For negative numbers it returns the value floored,
+    for positive numbers it returns the value ceiled.
+    """
+    # same as:  math.copysign(math.ceil(abs(x)), x)
+    # OR:
+    # ## versus this, which could save many function calls
+    # import math
+    # ceil_or_floor = { True : math.ceil, False : math.floor, }
+    # # usage
+    # x = floor_or_ceil[val<0.0](val)
+
+    if value < 0:
+        return math.floor(value)
+    return math.ceil(value)
 
 def terminate():
     pygame.quit()
