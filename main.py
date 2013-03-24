@@ -25,12 +25,18 @@ JUMP_HEIGHT = 200           # pixels
 
 
 # Here is the place to define constants for AI implementation...
-SOCCER_BALL_POSITION = ((WINWIDTH - 100), HALF_WINHEIGHT - 100)
+SOCCER_BALL_POSITION = ((WINWIDTH - 100), HALF_WINHEIGHT - 300)
 SOCCER_BALL_SIZE = (16, 16)
-SOCCER_GRAVITY = 0.02
+SOCCER_GRAVITY = 0.01
 SOCCER_FLOOR_ADJUSTMENT_FACTOR = 2.6
 SOCCER_ROTATE_INCREMENT = 2
 aiMoveStarted = False
+
+BANANA_PEEL_POSITION = ((WINWIDTH - 100), HALF_WINHEIGHT)
+BANANA_PEEL_SIZE = (64, 64)
+BANANA_PEEL_INIT_SLIP_TIME = 0
+BANANA_ROTATE_FIRST = -2
+BANANA_ROTATE_SECOND = 0
 
 def floorY():
     ''' The Y coordinate of the floor, where the man is placed '''
@@ -57,7 +63,8 @@ def main():
     IMAGESDICT = {
         'title': pygame.image.load('img/title.png'),
         'player': pygame.image.load('img/princess.png'),
-        'soccerAI': pygame.image.load('img/soccer_ball.png')
+        'soccerAI': pygame.image.load('img/soccer_ball.png'),
+        'banana_peel': pygame.image.load('img/banana_peel.png')
         }    
 
     # PLAYERIMAGES is a list of all possible characters the player can be.
@@ -87,15 +94,24 @@ def runGame():
         IMAGESDICT['player']
         )
 
-    IMGSCALE = pygame.transform.scale(IMAGESDICT['soccerAI'], SOCCER_BALL_SIZE)
-
-    # Initialize the AI object
+    SOCCER_IMG_SCALE = pygame.transform.scale(IMAGESDICT['soccerAI'], SOCCER_BALL_SIZE)
+    BANANA_IMG_SCALE = pygame.transform.scale(IMAGESDICT['banana_peel'], BANANA_PEEL_SIZE)
+    # Initialize the soccer ball object
     soccerBall = AI.soccerBall(        
         SOCCER_BALL_POSITION,
         SOCCER_BALL_SIZE,
-        IMGSCALE,
-        'left'
-        )    
+        SOCCER_IMG_SCALE,
+        LEFT
+        )
+
+    # Initialize the banana peel object
+    bananaPeel = AI.bananaPeel(
+        BANANA_PEEL_POSITION,
+        BANANA_PEEL_SIZE,
+        BANANA_IMG_SCALE
+        )
+
+    slipTimeElapsed = BANANA_PEEL_INIT_SLIP_TIME
 
     moveLeft  = False
     moveRight = False
@@ -162,6 +178,7 @@ def runGame():
 
         # Preliminaries of soccer ball AI
         soccerBall.doSoccerBallAction(p, floorY() + (p.height/SOCCER_FLOOR_ADJUSTMENT_FACTOR), SOCCER_GRAVITY, WINWIDTH)
+        bananaPeel.doBananaPeelAction(p, floorY(), SOCCER_GRAVITY, WINWIDTH)        
         ##################################
         
 
@@ -174,6 +191,9 @@ def runGame():
         # Draw the soccer ball AI
         SOCCER_IMG_ROT = pygame.transform.rotate(soccerBall.image, soccerBall.soccerBallRotate(SOCCER_ROTATE_INCREMENT))
         DISPLAYSURF.blit(SOCCER_IMG_ROT, soccerBall.get_rect())
+        # Draw the banana peel AI
+        BANANA_IMG_ROT = pygame.transform.rotate(bananaPeel.image, bananaPeel.slipRotate(floorY(), BANANA_ROTATE_FIRST, BANANA_ROTATE_SECOND))
+        DISPLAYSURF.blit(BANANA_IMG_ROT, bananaPeel.get_rect())
     
         pygame.display.update()
         FPSCLOCK.tick()
