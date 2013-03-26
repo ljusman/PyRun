@@ -22,6 +22,8 @@ class Player:
         self.onGround = False
         self.jumping = False
 
+        self.rect = self.get_rect()
+
     def isJumping(self):
         return self.jumping
 

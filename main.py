@@ -91,7 +91,7 @@ def runGame():
     # Initialize the player object
     p = player.Player(
         (HALF_WINWIDTH,HALF_WINHEIGHT),
-        (30,80),
+        (25,25),
         IMAGESDICT['player']
         )
 
@@ -109,36 +109,39 @@ def runGame():
     moveRight = False
     moveUp    = False
     moveDown  = False
-	
+
+    # parse the level map
+    level_map = tiledtmxloader.tmxreader.TileMapParser().parse_decode('testlevel.tmx')
+
+    # load the images using pygame
+    resources = tiledtmxloader.helperspygame.ResourceLoaderPygame()
+    resources.load(level_map)
+
+    # prepare map rendering
+    assert level_map.orientation == "orthogonal"
+
+    # renderer
+    renderer = tiledtmxloader.helperspygame.RendererPygame()
+
+    # retrieve the layers
+    sprite_layers = tiledtmxloader.helperspygame.get_layers_from_map(resources)
+
+    # filter layers
+    sprite_layers = [layer for layer in sprite_layers if not layer.is_object_group]
+
+    # craete player sprite with which we'll work with
+    player_sprite = p.get_sprite()
+
+    # add player to the right layer
+    sprite_layers[1].add_sprite(player_sprite)
+
+    cam_x = HALF_WINWIDTH
+    cam_y = HALF_WINHEIGHT
+
+    # set initial cam position and size
+    renderer.set_camera_position_and_size(cam_x, cam_y,WINWIDTH, WINHEIGHT)
+
     while True: # main game loop
-
-        # parse the level map
-        level_map = tiledtmxloader.tmxreader.TileMapParser().parse_decode('testlevel.tmx')
-
-        # load the images using pygame
-        resources = tiledtmxloader.helperspygame.ResourceLoaderPygame()
-        resources.load(level_map)
-
-        # prepare map rendering
-        assert level_map.orientation == "orthogonal"
-
-        # renderer
-        renderer = tiledtmxloader.helperspygame.RendererPygame()
-
-        # retrieve the layers
-        sprite_layers = tiledtmxloader.helperspygame.get_layers_from_map(resources)
-
-        # filter layers
-        sprite_layers = [layer for layer in sprite_layers if not layer.is_object_group]
-
-        # add player to the right layer
-        sprite_layers[1].add_sprite(p.get_sprite())
-
-        cam_x = HALF_WINWIDTH
-        cam_y = HALF_WINHEIGHT
-
-        # set initial cam position and size
-        renderer.set_camera_position_and_size(cam_x, cam_y,WINWIDTH, WINHEIGHT)
 
         # This loop will handle all of the player input events
         for event in pygame.event.get():
@@ -197,9 +200,10 @@ def runGame():
         # this should simulate constant gravity
         #step_y = MOVERATE
 
-        step_y = check_collision(p,10,sprite_layers[COLL_LAYER])
+        step_y = check_collision(p,1,sprite_layers[COLL_LAYER])
         p.y += step_y
 
+        player_sprite.rect.midbottom = (p.x, p.y)
         # Preliminaries of soccer ball AI
         soccerBall.doSoccerBallAction(p, floorY() + (p.height/SOCCER_FLOOR_ADJUSTMENT_FACTOR), SOCCER_GRAVITY, WINWIDTH)
         ##################################
@@ -209,14 +213,11 @@ def runGame():
         # Draw the background
         SCREEN.fill((0, 0, 0))
 
-        # Draw the player
-        SCREEN.blit(p.image, p.get_rect())
-
         # Draw the soccer ball AI
         SOCCER_IMG_ROT = pygame.transform.rotate(soccerBall.image, soccerBall.soccerBallRotate(SOCCER_ROTATE_INCREMENT))
         SCREEN.blit(SOCCER_IMG_ROT, soccerBall.get_rect())
         
-        # render the map
+        # render the map including the player
         for sprite_layer in sprite_layers:
             if sprite_layer.is_object_group:
                 # we dont draw the object group layers
@@ -275,7 +276,7 @@ def check_collision(player,step_y,coll_layer):
     # find the tile location of the player
     tile_x = int((player.x) // coll_layer.tilewidth)
     tile_y = int((player.y) // coll_layer.tileheight)
-
+    print '(', player.x,',',player.y,')',tile_y
     # find the tiles around the hero and extract their rects for collision
     tile_rects = []
     for diry in (-1,0, 1):
@@ -288,11 +289,10 @@ def check_collision(player,step_y,coll_layer):
     res_step_y = step_y
 
     # y direction, floor or ceil depending on the sign of the step
-    #step_y = special_round(step_y)
+    step_y = special_round(step_y)
 
     # detect a collision and dont move in y direction if colliding
     if player.get_rect().move(0, step_y).collidelist(tile_rects) > -1:
-        print 'Collision Detected'
         res_step_y = 0
 
     # return the step the hero should do
