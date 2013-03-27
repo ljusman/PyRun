@@ -276,7 +276,7 @@ def check_collision(player,step_y,coll_layer):
     # find the tile location of the player
     tile_x = int((player.x) // coll_layer.tilewidth)
     tile_y = int((player.y) // coll_layer.tileheight)
-    print '(', player.x,',',player.y,')',tile_y
+    
     # find the tiles around the hero and extract their rects for collision
     tile_rects = []
     for diry in (-1,0, 1):
