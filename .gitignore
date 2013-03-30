@@ -1,3 +1,6 @@
 *~
 *.xcf
 *.pyc
+*.orig
+*.pyo
+build/
