@@ -23,7 +23,7 @@ class Obstacle:
         self.width = size[0]
         self.height = size[1]        
 		
-    # Here, we have the collision boundaries
+    # We obtain collision boundaries with this method
     def get_rect(self):
         return pygame.Rect((self.xPos, self.yPos, self.width, self.height))
 
@@ -31,9 +31,16 @@ class Obstacle:
         return (self.xPos, self.yPos)
 
     # Is the obstacle touching a particular object?
-    def isTouching(self, x, y, endRangeX, endRangeY):
-        if (int(self.xPos) in range(int(x), int(endRangeX)) and (int(self.yPos) in range(int(y), int(endRangeY)))):            
-            return True            
+    def isTouching(self, x, y, endYRange):
+        '''
+            Here, we are fundamentally checking to see
+            whether or not the obstacle is in a certain
+            rectangular boundary (x, y, endRangeX, endRangeY) of
+            the target object.
+        '''    
+        if (int(x) in range(int(self.xPos), int(self.xPos + self.width))):            
+            if (int(endYRange) >= int(self.yPos)):
+                return True        
         return False
 
 # Stationary obstacles
@@ -43,9 +50,20 @@ class stationaryObstacle(Obstacle):
         return Obstacle.__init__(self, pos, size, image)
 
 class spikes(stationaryObstacle):
-    
+
     def __init__(self,pos,size,image):
+        self.collidedHit = False
         return stationaryObstacle.__init__(self, pos, size, image)
+
+    def spikeBump(self, obj):        
+        if self.isTouching(obj.x + obj.width, obj.y, obj.y + obj.height) or self.isTouching(obj.x, obj.y, obj.y + obj.height):                        
+            if (not self.collidedHit):                
+                soundObj = pygame.mixer.Sound('Sounds/Spikes.wav')
+                soundObj.play()
+                self.collidedHit = True
+        else:
+            if (self.collidedHit):            
+                self.collidedHit = False
 
 class treeLog(stationaryObstacle):
 
@@ -73,11 +91,33 @@ class bananaPeel(triggeredObstacle):
         # Properties of time concerned with the last slip with this object
         self.slipTimeCounter = 0
         self.slipRiseTime = 50
+        self.slipAlpha = 255        
         # Properties of gravity that dictate the banana peel's triggered movement
         self.gravityForce = 1
         self.gravityXCarry = -1
         return triggeredObstacle.__init__(self, pos, size, image)
 
+    '''
+        The banana peel will rotate as it is reaching its peak height (to
+        create the effect that it's been slipped on.
+    '''    
+
+    # Returns the value for the fade-out of the banana peel
+    def doFadeOutBananaPeel(self, alphaDecrement):        
+        if self.slipAlpha > 0 and self.slipTimeCounter >= self.slipRiseTime:
+            self.slipAlpha += alphaDecrement
+        return self.getBananaPeelFadeAmount()
+
+    def getBananaPeelFadeAmount(self):
+        return self.slipAlpha
+ 
+    '''
+        When an object (like you for example) slips on a banana peel,
+        the banana peel will fly a certain direction (defualt right now
+        is backwards), and rotate 90 degrees while it's reaching its max
+        height. Then, it will maintain its rotation once it has reached
+        that height, and simply be under the influence of gravity.
+    '''
     def slipRotate(self, gameFloor, rotateIncrementInit, rotateIncrementFall):
         if (self.slipTimeCounter < self.slipRiseTime and self.slippedOn):
             self.rotation += rotateIncrementInit
@@ -86,26 +126,27 @@ class bananaPeel(triggeredObstacle):
             # Did we already hit the floor?
             if (self.yPos >= gameFloor):
                 self.rotation = 0
-            else:
+            else:            
                 self.rotation += rotateIncrementFall                
             return (self.rotation)
 
     def doBananaPeelGravity(self, obj, floor, downAccel):
         if self.yPos < floor:
             self.move(self.gravityXCarry, 0)
-            # Settings on the gravity, so we have acceleration.
+            # Settings on the gravity, so we have acceleration
             self.gravityForce += (self.gravityForce * downAccel)
             self.move(0, self.gravityForce)
 
-    def doBananaPeelAction(self, obj, gameFloor, gravAccel, winWidth):
-        if (self.isTouching(obj.x, obj.y, obj.x + obj.width, obj.y + obj.height) and self.slippedOn == False):
+    def doBananaPeelAction(self, obj, gameFloor, gravAccel, winWidth):        
+        # The first time the body actually slips on the banana peel
+        if (self.isTouching(obj.x - 12, obj.y, obj.x + obj.width - 3, obj.y + obj.height) and self.slippedOn == False):
             self.slippedOn = True
 
         if (self.slippedOn and self.slipTimeCounter < self.slipRiseTime):            
             self.slipTimeCounter += 1            
             self.move(-self.xSpeed, -self.ySpeed)
         else:
-            # This is the point where the banana peel reaches its maximum height
+            # The point where the banana peel reaches its maximum height
             if (self.slipTimeCounter >= self.slipRiseTime):                
                 self.doBananaPeelGravity(obj, gameFloor, gravAccel)                
                 if (self.yPos >= gameFloor):
@@ -113,6 +154,15 @@ class bananaPeel(triggeredObstacle):
                     self.slipTimeCounter = 0
                     self.gravityForce = 1
                     
+class coconut(triggeredObstacle):
+
+    def __init__(self, pos, size, image):
+        return triggeredObstacle.__init__(self, pos, size, image)
+
+class sandCastle(triggeredObstacle):
+
+    def __init__(self, pos, size, image):
+        return triggeredObstacle.__init__(self, pos, size, image)
 
 # Obstacles capable of moving on their own
 class movingObstacle(Obstacle):
@@ -121,8 +171,8 @@ class movingObstacle(Obstacle):
         return Obstacle.__init__(self, pos, size, image)
 
     # Accepts a surface image to flip. "hori" and "vert" are booleans.
-    def reflectOff(image, hori, vert):
-        return pygame.transform.flip(image, hori, vert)
+    def reflectOff(self, display, image, hori, vert):
+        pygame.transform.flip(image, hori, vert)
 
     def move(self, xIncrement, yIncrement): 
         self.xPos += xIncrement
@@ -163,18 +213,18 @@ class soccerBall(movingObstacle):
             self.gravityForce = 1
 
     def doSoccerBallAction(self, obj, gameFloor, gravAccel, winWidth):        
-
+       
         # Soccer ball physics includes the gravity aspect of the ball.
         self.doSoccerBallPhysics(obj, gameFloor, gravAccel)
 
         # Testing for when to switch direction of the ball.
         if self.xPos == 0:
             self.soccerMoveMode = 'right'
-        elif self.soccerMoveMode == 'left' and self.isTouching(obj.x, obj.y, obj.x + obj.width, obj.y + obj.height):
+        elif self.soccerMoveMode == 'left' and self.isTouching(obj.x + obj.width, obj.y, obj.y + obj.height):
             self.soccerMoveMode = 'right'
         elif self.xPos == winWidth:
             self.soccerMoveMode = 'left'
-        elif self.soccerMoveMode == 'right' and self.isTouching(obj.x, obj.y, obj.x + obj.width, obj.y + obj.height):
+        elif self.soccerMoveMode == 'right' and self.isTouching(obj.x, obj.y, obj.y + obj.height):
             self.soccerMoveMode = 'left'
 
         # Move the soccer ball in accordance to the current direction it has on now.
@@ -182,5 +232,17 @@ class soccerBall(movingObstacle):
             self.move(1, 0)
         elif self.soccerMoveMode == 'left':
             self.move(-1, 0)
+
+class bird(movingObstacle):
+
+    def __init__(self,pos,size,image):        
+        return movingObstacle.__init__(self, pos, size, image)
+
+class crocodile(movingObstacle):
+
+    def __init__(self,pos,size,image):        
+        return movingObstacle.__init__(self, pos, size, image)
+
+
 
             
