@@ -1,4 +1,4 @@
-import random, copy, os, pygame, sys
+import random, copy, os, pygame, sys, tiledtmxloader
 from pygame.locals import *
 
 DEGREES_IN_CIRCLE = 360
@@ -30,6 +30,9 @@ class Obstacle:
     def getPosition(self):        
         return (self.xPos, self.yPos)
 
+    def get_sprite(self):
+        return tiledtmxloader.helperspygame.SpriteLayer.Sprite(self.image, self.get_rect())
+
     # Is the obstacle touching a particular object?
     def isTouching(self, x, y, endYRange):
         '''
@@ -55,7 +58,13 @@ class spikes(stationaryObstacle):
         self.collidedHit = False
         return stationaryObstacle.__init__(self, pos, size, image)
 
-    def spikeBump(self, obj):        
+    def spikeBump(self, obj):
+        '''
+            We want to ensure that the first time the obstacle is hit
+            by another object, it emits a "clang" sound. But after that,
+            we want it so that as long as the object is touching the spikes,
+            the spikes make no sound.
+        '''
         if self.isTouching(obj.x + obj.width, obj.y, obj.y + obj.height) or self.isTouching(obj.x, obj.y, obj.y + obj.height):                        
             if (not self.collidedHit):                
                 soundObj = pygame.mixer.Sound('Sounds/Spikes.wav')
@@ -167,7 +176,8 @@ class sandCastle(triggeredObstacle):
 # Obstacles capable of moving on their own
 class movingObstacle(Obstacle):
 
-    def __init__(self,pos,size,image):        
+    def __init__(self,pos,size,image):
+        self.speed = 0
         return Obstacle.__init__(self, pos, size, image)
 
     # Accepts a surface image to flip. "hori" and "vert" are booleans.
@@ -176,17 +186,19 @@ class movingObstacle(Obstacle):
 
     def move(self, xIncrement, yIncrement): 
         self.xPos += xIncrement
-        self.yPos += yIncrement        
+        self.yPos += yIncrement
+
+    def setSpeed(self, speedAmount):
+        self.speed = speedAmount
 
 
 class soccerBall(movingObstacle):        
     
     def __init__(self,pos,size,image,moveMode):
-        self.soccerMoveMode = moveMode
-        self.speed = 1
+        self.soccerMoveMode = moveMode        
         self.gravityForce = 1
         self.rotation = 0
-        return movingObstacle.__init__(self, pos, size, image)
+        return movingObstacle.__init__(self, pos, size, image)    
 
     '''
         Rotate the soccer ball every certain amount of degree specified,
@@ -194,11 +206,11 @@ class soccerBall(movingObstacle):
     '''        
     def soccerBallRotate(self, rotateIncrement):
         if self.soccerMoveMode == 'left':
-            self.rotation += 1
+            self.rotation += rotateIncrement
             if self.rotation == DEGREES_IN_CIRCLE:
                 self.rotation = 0
         elif self.soccerMoveMode == 'right':
-            self.rotation -= 1
+            self.rotation -= rotateIncrement
             if self.rotation == DEGREES_IN_CIRCLE:
                 self.rotation = 0
         return self.rotation
@@ -229,9 +241,9 @@ class soccerBall(movingObstacle):
 
         # Move the soccer ball in accordance to the current direction it has on now.
         if self.soccerMoveMode == 'right':
-            self.move(1, 0)
+            self.move(self.speed, 0)
         elif self.soccerMoveMode == 'left':
-            self.move(-1, 0)
+            self.move(-self.speed, 0)
 
 class bird(movingObstacle):
 
