@@ -1,4 +1,4 @@
-import random, copy, os, pygame, sys, constants, tiledtmxloader
+import random, copy, os, pygame, sys, tiledtmxloader
 from pygame.locals import *
 
 class Player:
