@@ -1,4 +1,4 @@
-import random, copy, os, pygame, sys
+import random, copy, os, pygame, sys, tiledtmxloader
 from pygame.locals import *
 
 class Player:
@@ -19,8 +19,30 @@ class Player:
         self.width = size[0]
         self.height = size[1]
 
+        self.onGround = False
+        self.jumping = False
+
+        self.rect = self.get_rect()
+
+    def isJumping(self):
+        return self.jumping
+
     def get_rect(self):
         return pygame.Rect((self.x, self.y, self.width, self.height))
 
+<<<<<<< HEAD
     def change_sprite(self,image):
         self.image = image
+=======
+    def get_sprite(self):
+        return tiledtmxloader.helperspygame.SpriteLayer.Sprite(self.image, self.get_rect())
+
+    def get_x_tiles(self):
+        '''
+            Gets the horizonal tile rows which the player character intersects with
+        '''
+        topRange = self.y % TILE_SIZE
+        bottomRange = (self.y - self.height) % TILE_SIZE
+
+        return (topRange, bottomRange)
+>>>>>>> 56e3266be08417e1b3df149263bec8f6994ca280
