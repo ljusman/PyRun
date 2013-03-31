@@ -30,10 +30,9 @@ class Player:
     def get_rect(self):
         return pygame.Rect((self.x, self.y, self.width, self.height))
 
-<<<<<<< HEAD
     def change_sprite(self,image):
         self.image = image
-=======
+
     def get_sprite(self):
         return tiledtmxloader.helperspygame.SpriteLayer.Sprite(self.image, self.get_rect())
 
@@ -45,4 +44,3 @@ class Player:
         bottomRange = (self.y - self.height) % TILE_SIZE
 
         return (topRange, bottomRange)
->>>>>>> 56e3266be08417e1b3df149263bec8f6994ca280
