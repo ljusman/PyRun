@@ -232,7 +232,13 @@ def runGame():
                     moveDown = False            
                 elif event.key == K_ESCAPE:
                         terminate()
+        '''
+            All the jumping and gravity is handled here.
+            If the player is jumping we move them up, other wise they are moving down (gravity).
+            We can alter how quickly the player jumps by altering the moverate or jump duration.
 
+            Things TODO: if the player collides with an object as it moves up the player should stop jumping.
+        '''
         if p.isJumping():
             t = pygame.time.get_ticks() - jumpingStart
             if t > JUMPING_DURATION:
