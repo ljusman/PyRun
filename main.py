@@ -236,8 +236,6 @@ def runGame():
             All the jumping and gravity is handled here.
             If the player is jumping we move them up, other wise they are moving down (gravity).
             We can alter how quickly the player jumps by altering the moverate or jump duration.
-
-            Things TODO: if the player collides with an object as it moves up the player should stop jumping.
         '''
         if p.isJumping():
             t = pygame.time.get_ticks() - jumpingStart
@@ -392,6 +390,8 @@ def check_collision(player,step_x,step_y,coll_layer):
 
     # detect a collision and dont move in y direction if colliding
     if player.get_rect().move(0, step_y).collidelist(tile_rects) > -1:
+        if p.isJumping():
+            p.jumping = False;
         res_step_y = 0
 
     # return the step the hero should do
