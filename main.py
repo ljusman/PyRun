@@ -4,7 +4,7 @@ from pygame.locals import *
 FPS = 30 # frames per second to update the SCREEN
 WINWIDTH = 800 # width of the program's window, in pixels
 WINHEIGHT = 600 # height in pixels
-MOVERATE = 4 # How fast the player moves
+MOVERATE = 6 # How fast the player moves
 HALF_WINWIDTH = int(WINWIDTH / 2)
 HALF_WINHEIGHT = int(WINHEIGHT / 2)
 
@@ -390,8 +390,8 @@ def check_collision(player,step_x,step_y,coll_layer):
 
     # detect a collision and dont move in y direction if colliding
     if player.get_rect().move(0, step_y).collidelist(tile_rects) > -1:
-        if p.isJumping():
-            p.jumping = False;
+        if player.isJumping() and step_y < 0:
+            player.jumping = False;
         res_step_y = 0
 
     # return the step the hero should do
