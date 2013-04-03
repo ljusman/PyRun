@@ -237,23 +237,19 @@ def runGame():
             t = pygame.time.get_ticks() - jumpingStart
             if t > JUMPING_DURATION:
                 p.jumping = False
-                jumpHeight = 0
-            else:
-                jumpHeight = jumpHeightAtTime(t)
-            p.y = floorY() - jumpHeight
+            step_y -= MOVERATE
+        else:
+            step_y += MOVERATE
         
         # actually move the player
         if moveLeft:
-            step_x = -MOVERATE
+            step_x -= MOVERATE
         if moveRight:
-            step_x = MOVERATE
+            step_x += MOVERATE
         if moveUp:
             if not p.isJumping():
                 p.jumping = True
                 jumpingStart = pygame.time.get_ticks()
-
-        # this should simulate constant gravity
-        step_y = MOVERATE
 
         step_x, step_y = check_collision(p,step_x,step_y,sprite_layers[COLL_LAYER])
 
