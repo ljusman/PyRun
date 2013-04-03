@@ -131,7 +131,7 @@ def runGame():
     # Initialize the player object
     p = player.Player(
         (HALF_WINWIDTH,HALF_WINHEIGHT),
-        (25,25),
+        (20,20),
         IMAGESDICT['player']
         )
     
@@ -157,10 +157,12 @@ def runGame():
 
     slipTimeElapsed = BANANA_PEEL_INIT_SLIP_TIME
     
+    # Initialize moving variables
     moveLeft  = False
     moveRight = False
     moveUp    = False
     moveDown  = False
+
 
     # parse the level map
     level_map = tiledtmxloader.tmxreader.TileMapParser().parse_decode('testlevel.tmx')
@@ -194,6 +196,10 @@ def runGame():
     renderer.set_camera_position_and_size(cam_x, cam_y, WINWIDTH, WINHEIGHT)
 
     while True: # main game loop
+
+        # reset applicable variables
+        step_x = 0
+        step_y = 0
 
         # This loop will handle all of the player input events
         for event in pygame.event.get():
@@ -238,25 +244,26 @@ def runGame():
         
         # actually move the player
         if moveLeft:
-            p.x -= MOVERATE
+            step_x = -MOVERATE
         if moveRight:
-            p.x += MOVERATE
+            step_x = MOVERATE
         if moveUp:
             if not p.isJumping():
                 p.jumping = True
                 jumpingStart = pygame.time.get_ticks()
-        if moveDown:
-            #p.y += MOVERATE
-            pass
 
         # this should simulate constant gravity
-        # step_y = MOVERATE
+        step_y = MOVERATE
 
-        step_y = check_collision(p,12,sprite_layers[COLL_LAYER])
+        step_x, step_y = check_collision(p,step_x,step_y,sprite_layers[COLL_LAYER])
+
+        # Apply the steps to the player and the player rect
+        p.x += step_x
         p.y += step_y
 
         player_sprite.rect.midbottom = (p.x, p.y)        
         
+        # Set the new camera position
         renderer.set_camera_position(HALF_WINWIDTH, HALF_WINHEIGHT)
 
         # Draw the background
@@ -357,7 +364,7 @@ def startScreen():
         pygame.display.update()
         FPSCLOCK.tick()
 
-def check_collision(player,step_y,coll_layer):
+def check_collision(player,step_x,step_y,coll_layer):
     # find the tile location of the player
     tile_x = int((player.x) // coll_layer.tilewidth)
     tile_y = int((player.y) // coll_layer.tileheight)
@@ -370,9 +377,14 @@ def check_collision(player,step_y,coll_layer):
                 tile_rects.append(coll_layer.content2D[tile_y + diry][tile_x + dirx].rect)
 
     # save the original steps and return them if not canceled
-    #res_step_x = step_x
+    res_step_x = step_x
     res_step_y = step_y
 
+    step_x  = special_round(step_x)
+    if step_x != 0:
+        if player.get_rect().move(step_x, 0).collidelist(tile_rects) > -1:
+            res_step_x = 0
+    
     # y direction, floor or ceil depending on the sign of the step
     step_y = special_round(step_y)
 
@@ -381,7 +393,7 @@ def check_collision(player,step_y,coll_layer):
         res_step_y = 0
 
     # return the step the hero should do
-    return res_step_y
+    return res_step_x, res_step_y
 
 def special_round(value):
     """
