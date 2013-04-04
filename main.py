@@ -80,7 +80,9 @@ SPIDER_SPEED = 5
 SPIDER_FRAME_RATE = 5
 
 MUD_POSITION = ((WINWIDTH - 600), (HALF_WINHEIGHT))
+MUD_POSITION_2 = ((WINWIDTH - 600), (HALF_WINHEIGHT - 30))
 MUD_SIZE = (150, 40)
+MUD_SIZE_2 = (150, 70)
 MUD_FRAME_RATE = 10
 
 def floorY():
@@ -207,7 +209,7 @@ def runGame():
     SPIDER_IMG_SCALE_2 = pygame.transform.smoothscale(IMAGESDICT['spider2'], SPIDER_SIZE)
     LOG_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['log'], LOG_SIZE)
     MUD_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['mud'], MUD_SIZE)
-    MUD_IMG_SCALE_2 = pygame.transform.smoothscale(IMAGESDICT['mud2'], MUD_SIZE)
+    MUD_IMG_SCALE_2 = pygame.transform.smoothscale(IMAGESDICT['mud2'], MUD_SIZE_2)
 
     # Animations for various AI    
     snakeAnimation = [SNAKE_IMG_SCALE, SNAKE_IMG_SCALE_2]
