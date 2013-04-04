@@ -12,6 +12,7 @@ CAM_MOVE_SPEED = 5 # how many pixels per frame the camera moves
 
 BRIGHTBLUE  = (  0, 170, 255)
 WHITE       = (255, 255, 255)
+GRAY_1      = (200, 200, 200)
 BGCOLOR     = BRIGHTBLUE
 TEXTCOLOR   = WHITE
 
@@ -30,23 +31,57 @@ TIME_AT_PEAK = JUMPING_DURATION / 2
 JUMP_HEIGHT = 200           # pixels
 
 # Here is the place to define constants for AI implementation...
-SOCCER_BALL_POSITION = ((WINWIDTH - 100), (HALF_WINHEIGHT - 100))
-SOCCER_BALL_SIZE = (16, 16)
-SOCCER_GRAVITY = 0.4
-SOCCER_FLOOR_ADJUSTMENT_FACTOR = 2.6
-SOCCER_ROTATE_INCREMENT = 4
-SOCCER_SPEED = 5
+ROCK_BALL_POSITION = ((WINWIDTH - 400), (HALF_WINHEIGHT - 200))
+ROCK_BALL_SIZE = (256, 256)
+ROCK_GRAVITY = 0.4
+ROCK_FLOOR_ADJUSTMENT_FACTOR = 2.6
+ROCK_ROTATE_INCREMENT = 4
+ROCK_SPEED = 8
 aiMoveStarted = False
 
-BANANA_PEEL_POSITION = ((WINWIDTH - 100), (HALF_WINHEIGHT))
+'''
+    Forward slip: BANANA_PEEL_HORI_RISE_SPEED = 20
+                  BANANA_PEEL_VERT_RISE_SPEED = -20
+                  BANANA_ROTATE_FIRST = 10
+    Backward slip: BANANA_PEEL_HORI_RISE_SPEED = -20
+                   BANANA_PEEL_VERT_RISE_SPEED = -20
+                   BANANA_ROTATE_FIRST = -10
+'''
+BANANA_PEEL_POSITION = ((WINWIDTH - 500), (HALF_WINHEIGHT))
 BANANA_PEEL_SIZE = (50, 50)
-BANANA_PEEL_INIT_SLIP_TIME = 0
-BANANA_ROTATE_FIRST = -2
+BANANA_PEEL_INIT_SLIP_TIME = 10
+BANANA_PEEL_HORI_RISE_SPEED = -20
+BANANA_PEEL_VERT_RISE_SPEED = -20
+BANANA_PEEL_TIME_TO_RISE = 10
+BANANA_ROTATE_FIRST = -10
 BANANA_ROTATE_SECOND = 0
-BANANA_PEEL_FADE_DECREMENT = -4
+BANANA_PEEL_FADE_DECREMENT = -25
 
 SPIKES_POSITION = ((WINWIDTH - 200), (HALF_WINHEIGHT - 3))
 SPIKES_SIZE = (128, 50)
+
+LOG_POSITION = ((WINWIDTH - 300), (HALF_WINHEIGHT))
+LOG_SIZE = (256, 40)
+
+SNAKE_POSITION = ((WINWIDTH - 400), (HALF_WINHEIGHT))
+SNAKE_SIZE = (100, 64)
+SNAKE_SIZE_2 = (128, 64)
+SNAKE_SPEED = 4
+SNAKE_FRAME_RATE = 7
+
+BIRD_POSITION = ((WINWIDTH + 10), (HALF_WINHEIGHT - 200))
+BIRD_SIZE = (150, 110)
+BIRD_SPEED = 12
+BIRD_FRAME_RATE = 2
+
+SPIDER_POSITION = ((WINWIDTH - 200), (HALF_WINHEIGHT - 100))
+SPIDER_SIZE = (64, 64)
+SPIDER_SPEED = 5
+SPIDER_FRAME_RATE = 5
+
+MUD_POSITION = ((WINWIDTH - 600), (HALF_WINHEIGHT))
+MUD_SIZE = (150, 40)
+MUD_FRAME_RATE = 10
 
 def floorY():
     ''' The Y coordinate of the floor, where the man is placed '''
@@ -74,20 +109,31 @@ def blit_alpha(screenSurface, source, location, opacity):
         temp.set_alpha(opacity)        
         screenSurface.blit(temp, location)
 
+# A function for creating obstacles
 def makeObstacle(obstacleChoice, position, size, image, direction = 'left'):    
     if (obstacleChoice == 'Spikes'):
         return AI.spikes(position, size, image)
+    elif (obstacleChoice == 'Log'):
+        return AI.treeLog(position, size, image)
     elif (obstacleChoice == 'Giant rock'):
-        return AI.soccerBall(position, size, image, direction)
+        return AI.giantRock(position, size, image, direction)
     elif (obstacleChoice == 'Banana peel'):
         return AI.bananaPeel(position, size, image)
+    elif (obstacleChoice == 'Snake'):
+        return AI.snake(position, size, image)
+    elif (obstacleChoice == 'Bird'):
+        return AI.bird(position, size, image)
+    elif (obstacleChoice == 'Spider'):
+        return AI.spider(position, size, image)
+    elif (obstacleChoice == 'Mud'):
+        return AI.mud(position, size, image)
     else:
         return AI.Obstacle((0,0), (0,0), pygame.Surface((0, 0)))
             
     
 def main():
     global FPSCLOCK, SCREEN, IMAGESDICT, BASICFONT, PLAYERIMAGES, currentImage
-    # Pygame initialization and basic set up of the globalvariables
+    # Pygame initialization and basic set up of the global variables
     pygame.init()
     FPSCLOCK = pygame.time.Clock() # Creates an object to keep track of time.
 
@@ -102,8 +148,20 @@ def main():
         'title': pygame.image.load('img/title.png'),
         'player': pygame.image.load('img/princess.png'),
         'spikes': pygame.image.load('img/spikes.png'),
-        'soccerAI': pygame.image.load('img/soccer_ball.png'),
-        'banana_peel': pygame.image.load('img/peel.png')        
+        'rock': pygame.image.load('img/RockRollingImages/00.png'),
+        'rock2': pygame.image.load('img/RockRollingImages/01.png'),
+        'rock3': pygame.image.load('img/RockRollingImages/02.png'),
+        'rock4': pygame.image.load('img/RockRollingImages/03.png'),                                
+        'banana_peel': pygame.image.load('img/peel.png'),
+        'snake': pygame.image.load('img/SnakeMovingImages/snake.png'),
+        'snake2': pygame.image.load('img/SnakeMovingImages/snake2.png'),
+        'bird': pygame.image.load('img/BirdFlappingImages/00.png'),
+        'bird2': pygame.image.load('img/BirdFlappingImages/01.png'),
+        'spider': pygame.image.load('img/SpiderImages/00.png'),
+        'spider2': pygame.image.load('img/SpiderImages/01.png'),
+        'log': pygame.image.load('img/log.png'),
+        'mud': pygame.image.load('img/MudSplashingImages/mud.png'),
+        'mud2': pygame.image.load('img/MudSplashingImages/mud_sp.png')
         }    
 
     # PLAYERIMAGES is a list of all possible characters the player can be.
@@ -135,25 +193,50 @@ def runGame():
         IMAGESDICT['player']
         )
     
-    SOCCER_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['soccerAI'], SOCCER_BALL_SIZE)
+    ROCK_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['rock'], ROCK_BALL_SIZE)
+    ROCK_IMG_SCALE_2 = pygame.transform.smoothscale(IMAGESDICT['rock2'], ROCK_BALL_SIZE)
+    ROCK_IMG_SCALE_3 = pygame.transform.smoothscale(IMAGESDICT['rock3'], ROCK_BALL_SIZE)
+    ROCK_IMG_SCALE_4 = pygame.transform.smoothscale(IMAGESDICT['rock4'], ROCK_BALL_SIZE)
     BANANA_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['banana_peel'], BANANA_PEEL_SIZE) 
     SPIKES_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['spikes'], SPIKES_SIZE)
+    SNAKE_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['snake'], SNAKE_SIZE)
+    SNAKE_IMG_SCALE_2 = pygame.transform.smoothscale(IMAGESDICT['snake2'], SNAKE_SIZE_2)
+    BIRD_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['bird'], BIRD_SIZE)
+    BIRD_IMG_SCALE_2 = pygame.transform.smoothscale(IMAGESDICT['bird2'], BIRD_SIZE)
+    SPIDER_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['spider'], SPIDER_SIZE)
+    SPIDER_IMG_SCALE_2 = pygame.transform.smoothscale(IMAGESDICT['spider2'], SPIDER_SIZE)
+    LOG_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['log'], LOG_SIZE)
+    MUD_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['mud'], MUD_SIZE)
+    MUD_IMG_SCALE_2 = pygame.transform.smoothscale(IMAGESDICT['mud2'], MUD_SIZE)
 
-    soccerBall = AI.soccerBall(
-        SOCCER_BALL_POSITION,
-        SOCCER_BALL_SIZE,
-        SOCCER_IMG_SCALE,
+    # Animations for various AI    
+    snakeAnimation = [SNAKE_IMG_SCALE, SNAKE_IMG_SCALE_2]
+    birdAnimation = [BIRD_IMG_SCALE, BIRD_IMG_SCALE_2]
+    spiderAnimation = [SPIDER_IMG_SCALE, SPIDER_IMG_SCALE_2]
+    rockAnimation = [ROCK_IMG_SCALE, ROCK_IMG_SCALE_2, ROCK_IMG_SCALE_3, ROCK_IMG_SCALE_4]
+    mudAnimation = [MUD_IMG_SCALE, MUD_IMG_SCALE_2]
+
+    giantRock = AI.giantRock(
+        ROCK_BALL_POSITION,
+        ROCK_BALL_SIZE,
+        ROCK_IMG_SCALE,
         LEFT
         )
     
     # For storing our obstacles
     obstacleObjs = []
 
-    # Append a soccer ball and banana peel object to our list of objects
-    obstacleObjs.append(makeObstacle('Giant rock', SOCCER_BALL_POSITION, SOCCER_BALL_SIZE, SOCCER_IMG_SCALE))
-    obstacleObjs.append(makeObstacle('Spikes', SPIKES_POSITION, SPIKES_SIZE, SPIKES_IMG_SCALE))    
+    # Append a ROCK ball and banana peel object to our list of objects
+    obstacleObjs.append(makeObstacle('Giant rock', ROCK_BALL_POSITION, ROCK_BALL_SIZE, ROCK_IMG_SCALE))
+    obstacleObjs.append(makeObstacle('Spikes', SPIKES_POSITION, SPIKES_SIZE, SPIKES_IMG_SCALE))
+    obstacleObjs.append(makeObstacle('Snake', SNAKE_POSITION, SNAKE_SIZE, SNAKE_IMG_SCALE))
+    obstacleObjs.append(makeObstacle('Bird', BIRD_POSITION, BIRD_SIZE, BIRD_IMG_SCALE))
+    obstacleObjs.append(makeObstacle('Spider', SPIDER_POSITION, SPIDER_SIZE, SPIDER_IMG_SCALE))
+    obstacleObjs.append(makeObstacle('Log', LOG_POSITION, LOG_SIZE, LOG_IMG_SCALE))
+    obstacleObjs.append(makeObstacle('Banana peel', BANANA_PEEL_POSITION, BANANA_PEEL_SIZE, BANANA_IMG_SCALE))
+    obstacleObjs.append(makeObstacle('Mud', MUD_POSITION, MUD_SIZE, MUD_IMG_SCALE))
 
-    ballImage = pygame.transform.scale(IMAGESDICT['soccerAI'], SOCCER_BALL_SIZE)   
+    ballImage = pygame.transform.scale(IMAGESDICT['rock'], ROCK_BALL_SIZE)   
 
     slipTimeElapsed = BANANA_PEEL_INIT_SLIP_TIME
     
@@ -260,12 +343,7 @@ def runGame():
         renderer.set_camera_position(HALF_WINWIDTH, HALF_WINHEIGHT)
 
         # Draw the background
-        SCREEN.fill((0, 0, 0))
-
-        ''' Collision debugging '''
-        # pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (p.x, p.y, p.width, p.height))
-        # pygame.draw.rect(DISPLAYSURF, (255, 255, 255), (obstacleObjs[0].xPos, obstacleObjs[0].yPos, obstacleObjs[0].width, obstacleObjs[0].height))
-        # pygame.draw.rect(DISPLAYSURF, (255, 0, 255), (obstacleObjs[1].xPos, obstacleObjs[1].yPos, obstacleObjs[1].width, obstacleObjs[1].height))
+        SCREEN.fill((0, 0, 0))    
                     
         
         # render the map including the player
@@ -277,6 +355,11 @@ def runGame():
             else:
                 renderer.render_layer(SCREEN, sprite_layer)
         
+        ''' Collision debugging '''
+        # pygame.draw.rect(SCREEN, (0, 0, 0), (p.x, p.y, p.width, p.height))
+        # pygame.draw.rect(SCREEN, (0, 0, 0), (obstacleObjs[0].xPos, obstacleObjs[0].yPos, obstacleObjs[0].width, obstacleObjs[0].height))
+        # pygame.draw.rect(SCREEN, (255, 0, 255), (obstacleObjs[1].xPos, obstacleObjs[1].yPos, obstacleObjs[1].width, obstacleObjs[1].height))
+
                 
         '''
             We need specific drawing cases for different obstacles,
@@ -288,29 +371,75 @@ def runGame():
             Here, we have backwards-list checking to avoid a common object
             deletion mistake.
         ''' 
-        for i in range(len(obstacleObjs) - 1, -1, -1):            
-            # Checking if a particular object is a soccer ball.
-            if isinstance(obstacleObjs[i], AI.soccerBall):
-                obstacleObjs[i].setSpeed(SOCCER_SPEED)
-                obstacleObjs[i].doSoccerBallAction(p, floorY() + (p.height/SOCCER_FLOOR_ADJUSTMENT_FACTOR), SOCCER_GRAVITY, WINWIDTH)
-                SOCCER_IMG_ROT = pygame.transform.rotate(obstacleObjs[i].image, obstacleObjs[i].soccerBallRotate(SOCCER_ROTATE_INCREMENT))
-                SCREEN.blit(SOCCER_IMG_ROT, obstacleObjs[i].get_rect())
+        for i in range(len(obstacleObjs) - 1, -1, -1):
+            # Player collision checking with the obstacles.
+            if p.isTouching(obstacleObjs[i].xPos, obstacleObjs[i].yPos, obstacleObjs[i].yPos + obstacleObjs[i].height):
+                soundObj = pygame.mixer.Sound('Sounds/Spikes.wav')
+                soundObj.play()
+            ''' Collision boundary drawing (for debug) '''
+            # pygame.draw.rect(SCREEN, GRAY_1, (obstacleObjs[i].xPos, obstacleObjs[i].yPos, obstacleObjs[i].width, obstacleObjs[i].height))
+            # Checking if a particular object is a rock.
+            if isinstance(obstacleObjs[i], AI.giantRock):
+                obstacleObjs[i].setSpeed(ROCK_SPEED)
+                obstacleObjs[i].doGiantRockAction(p, floorY(), ROCK_GRAVITY, WINWIDTH)
+                # CHOPPED_ROCK = pygame.transform.rotozoom(obstacleObjs[i].image, obstacleObjs[i].giantRockRotate(ROCK_ROTATE_INCREMENT), 2.0)               
+                # CHOPPED_ROCK = pygame.transform.scale(CHOPPED_ROCK, obstacleObjs[i].image.get_size())                                
+                SCREEN.blit(rockAnimation[obstacleObjs[i].animateToNext(2, 8)], obstacleObjs[i].get_rect())                            
             # Checking if a particular object is a banana peel.
             elif isinstance(obstacleObjs[i], AI.bananaPeel):
-                obstacleObjs[i].doBananaPeelAction(p, floorY(), SOCCER_GRAVITY, WINWIDTH)
+                obstacleObjs[i].setHoriAndVertRiseSpeeds(BANANA_PEEL_HORI_RISE_SPEED, BANANA_PEEL_VERT_RISE_SPEED)
+                obstacleObjs[i].doBananaPeelAction(p, floorY(), ROCK_GRAVITY, BANANA_PEEL_TIME_TO_RISE, WINWIDTH)
                 BANANA_IMG_ROT = pygame.transform.rotate(obstacleObjs[i].image, obstacleObjs[i].slipRotate(floorY(), BANANA_ROTATE_FIRST, BANANA_ROTATE_SECOND))            
                 blit_alpha(SCREEN, BANANA_IMG_ROT, obstacleObjs[i].get_rect(), obstacleObjs[i].doFadeOutBananaPeel(BANANA_PEEL_FADE_DECREMENT))
                 # Has the banana peel faded to 0 after being slipped on?
                 # (This check has been validated)
                 if obstacleObjs[i].getBananaPeelFadeAmount() <= 0:                    
-                    del obstacleObjs[i]            
+                    del obstacleObjs[i]
+            # Checking if a particular object represents the spikes
             elif isinstance(obstacleObjs[i], AI.spikes):
                 obstacleObjs[i].spikeBump(p)
                 SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())
-                # Default for drawing any other obstacles
+            # Checking if the object is a tree log
+            elif isinstance(obstacleObjs[i], AI.treeLog):
+                obstacleObjs[i].collidedHardWith(p)
+                SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())
+            # Checking if the object is a snake
+            elif isinstance(obstacleObjs[i], AI.snake):
+                obstacleObjs[i].setFrameRate(SNAKE_FRAME_RATE)
+                if (obstacleObjs[i].doSnakeAction(SNAKE_SPEED)):
+                    SCREEN.blit(snakeAnimation[0], obstacleObjs[i].get_rect())
+                else:
+                    SCREEN.blit(snakeAnimation[1], obstacleObjs[i].get_rect())
+                if (obstacleObjs[i].xPos + obstacleObjs[i].width < 0):
+                    del obstacleObjs[i]
+            # Checking if the object is a bird
+            elif isinstance(obstacleObjs[i], AI.bird):
+                obstacleObjs[i].setFrameRate(BIRD_FRAME_RATE)
+                if (obstacleObjs[i].doBirdAction(BIRD_SPEED)):
+                    SCREEN.blit(birdAnimation[0], obstacleObjs[i].get_rect())
+                else:
+                    SCREEN.blit(birdAnimation[1], obstacleObjs[i].get_rect())
+                if (obstacleObjs[i].xPos + obstacleObjs[i].width < 0):
+                    del obstacleObjs[i]
+            # Checking if the object is a spider
+            elif isinstance(obstacleObjs[i], AI.spider):
+                obstacleObjs[i].setFrameRate(SPIDER_FRAME_RATE)
+                if (obstacleObjs[i].doSpiderAction(SPIDER_SPEED)):
+                    SCREEN.blit(spiderAnimation[0], obstacleObjs[i].get_rect())                    
+                else:
+                    SCREEN.blit(spiderAnimation[1], obstacleObjs[i].get_rect())                
+                pygame.draw.rect(SCREEN, GRAY_1, obstacleObjs[i].getWebStringRect())
+            elif isinstance(obstacleObjs[i], AI.mud):
+                obstacleObjs[i].setFrameRate(MUD_FRAME_RATE)
+                if (obstacleObjs[i].doMudAction(MUD_FRAME_RATE)):
+                    SCREEN.blit(mudAnimation[0], obstacleObjs[i].get_rect())                    
+                else:
+                    SCREEN.blit(mudAnimation[1], obstacleObjs[i].get_rect()) 
+            # Default for drawing any other obstacles
             else:
-                SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())                
-
+                SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())                                        
+                
+            
         pygame.display.update()
         FPSCLOCK.tick()
 
