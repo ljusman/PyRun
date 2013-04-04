@@ -100,7 +100,15 @@ def main():
     # contains all of the images that we will use in the game
     IMAGESDICT = {
         'title': pygame.image.load('img/title.png'),
-        'player': pygame.image.load('img/princess.png'),
+        'player': pygame.image.load('img/run_01.png'),
+        'jump1': pygame.image.load('img/jump_01.png'),
+        'jump2': pygame.image.load('img/jump_02.png'),
+        'jump3': pygame.image.load('img/jump_03.png'),
+        'jump4': pygame.image.load('img/jump_04.png'),
+        'run1': pygame.image.load('img/run_01.png'),
+        'run2': pygame.image.load('img/run_02.png'),
+        'run3': pygame.image.load('img/run_03.png'),
+        'run4': pygame.image.load('img/run_04.png'),
         'spikes': pygame.image.load('img/spikes.png'),
         'soccerAI': pygame.image.load('img/soccer_ball.png'),
         'banana_peel': pygame.image.load('img/peel.png')        
@@ -111,8 +119,6 @@ def main():
     currentImage = 0
     # PLAYERIMAGES = [IMAGESDICT['princess']]
     
-    
-
     startScreen() # function which shows the start menu
 
     runGame()
@@ -131,7 +137,7 @@ def runGame():
     # Initialize the player object
     p = player.Player(
         (HALF_WINWIDTH,HALF_WINHEIGHT),
-        (20,20),
+        (40,100),
         IMAGESDICT['player']
         )
     
@@ -195,8 +201,14 @@ def runGame():
     # set initial cam position and size
     renderer.set_camera_position_and_size(cam_x, cam_y, WINWIDTH, WINHEIGHT)
 
+    frame_count = 0
+    
     while True: # main game loop
 
+        sprite_layers[1].remove_sprite(player_sprite)
+        player_sprite = p.get_sprite()
+        sprite_layers[1].add_sprite(player_sprite)
+        
         # reset applicable variables
         step_x = 0
         step_y = 0
@@ -241,8 +253,18 @@ def runGame():
             t = pygame.time.get_ticks() - jumpingStart
             if t > JUMPING_DURATION:
                 p.jumping = False
+                p.change_sprite(
+                IMAGESDICT['jump1']
+                )
+            elif t > JUMPING_DURATION / 2:
+                p.change_sprite(
+                IMAGESDICT['jump4']
+                )
             step_y -= MOVERATE
         else:
+            p.change_sprite(
+                IMAGESDICT['jump3']
+                )
             step_y += MOVERATE
         
         # actually move the player
@@ -250,9 +272,31 @@ def runGame():
             step_x -= MOVERATE
         if moveRight:
             step_x += MOVERATE
+            if not p.jumping:
+                if frame_count is 20:
+                    p.change_sprite(
+                    IMAGESDICT['run1']
+                    )
+                elif frame_count is 40:
+                    p.change_sprite(
+                    IMAGESDICT['run2']
+                    )
+                elif frame_count is 60:
+                    p.change_sprite(
+                    IMAGESDICT['run3']
+                    )
+                elif frame_count is 80:
+                    p.change_sprite(
+                    IMAGESDICT['run4']
+                    )
+                if frame_count > 80:
+                    frame_count = 0
         if moveUp:
             if not p.isJumping():
                 p.jumping = True
+                p.change_sprite(
+                IMAGESDICT['jump2']
+                )
                 jumpingStart = pygame.time.get_ticks()
 
         step_x, step_y = check_collision(p,step_x,step_y,sprite_layers[COLL_LAYER])
@@ -316,8 +360,9 @@ def runGame():
                 SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())
                 # Default for drawing any other obstacles
             else:
-                SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())                
+                SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())
 
+        frame_count += 1
         pygame.display.update()
         FPSCLOCK.tick()
 
