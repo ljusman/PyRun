@@ -14,7 +14,7 @@
  </tileset>
  <layer name="Background" width="32" height="24">
   <data encoding="base64" compression="zlib">
-   eJxjZGBgYBzFo3gUgzHTIHDDKB64eBuNf9qGFz3Dl2mYxic9/DQcw204xtOoOwc3ZmLAXw4xDTAGAFf2AzA=
+   eJxjZGBgYBzFo3gUgzHTIHDDKB64eBuN/6ERT8TaNRzjkx5+Go7hNhzjadSdgxszMeAvh5gGGAMAUjYDLw==
   </data>
  </layer>
  <layer name="Character" width="32" height="24">
@@ -24,7 +24,7 @@
  </layer>
  <layer name="Collision" width="32" height="24" visible="0">
   <data encoding="base64" compression="zlib">
-   eJxjYBgFo2AUwADbQDtgFJAFqBVvo/FPGiA1vOgZvmx0to9egB5+Go7hRm8wVMJw1J20A2wM+MshtgHGAKl/ARs=
+   eJxjYBgFo2AUwADbQDtgFJAFqBVvo/FPW0DP8GWjs330AvTw03AMN3qDoRKGo+6kHWBjwF8OsQ0wBgCG/wEV
   </data>
  </layer>
 </map>
