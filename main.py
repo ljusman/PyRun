@@ -331,7 +331,7 @@ def runGame():
                         terminate()
         '''
             All the jumping and gravity is handled here.
-            If the player is jumping we move them up, other wise they are moving down (gravity).
+            If the player is jumping we move them up, otherwise they are moving down (gravity).
             We can alter how quickly the player jumps by altering the moverate or jump duration.
         '''
         if p.isJumping():
@@ -449,9 +449,9 @@ def runGame():
                 if obstacleObjs[i].getBananaPeelFadeAmount() <= 0:                    
                     del obstacleObjs[i]
             # Checking if a particular object represents the spikes
-            elif isinstance(obstacleObjs[i], AI.spikes):
-                obstacleObjs[i].spikeBump(p)
-                SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())
+            # elif isinstance(obstacleObjs[i], AI.spikes):
+                # obstacleObjs[i].spikeBump(p)
+                # SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())
             # Checking if the object is a tree log
             elif isinstance(obstacleObjs[i], AI.treeLog):
                 obstacleObjs[i].collidedHardWith(p)
@@ -490,8 +490,8 @@ def runGame():
                 else:
                     SCREEN.blit(mudAnimation[1], obstacleObjs[i].get_rect()) 
             # Default for drawing any other obstacles
-            else:
-                SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())                                        
+            # else:
+               # SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())                                        
                 
                     
         frame_count += 1
