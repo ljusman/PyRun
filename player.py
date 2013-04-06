@@ -51,6 +51,9 @@ class Player:
     def get_rect(self):
         return pygame.Rect((self.x, self.y, self.width, self.height))
 
+    def change_sprite(self,image):
+        self.image = image
+
     def get_sprite(self):
         return tiledtmxloader.helperspygame.SpriteLayer.Sprite(self.image, self.get_rect())
 

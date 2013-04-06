@@ -4,7 +4,7 @@ from pygame.locals import *
 FPS = 30 # frames per second to update the SCREEN
 WINWIDTH = 800 # width of the program's window, in pixels
 WINHEIGHT = 600 # height in pixels
-MOVERATE = 4 # How fast the player moves
+MOVERATE = 6 # How fast the player moves
 HALF_WINWIDTH = int(WINWIDTH / 2)
 HALF_WINHEIGHT = int(WINHEIGHT / 2)
 
@@ -148,7 +148,15 @@ def main():
     # contains all of the images that we will use in the game
     IMAGESDICT = {
         'title': pygame.image.load('img/title.png'),
-        'player': pygame.image.load('img/princess.png'),
+        'player': pygame.image.load('img/run_01.png'),
+        'jump1': pygame.image.load('img/jump_01.png'),
+        'jump2': pygame.image.load('img/jump_02.png'),
+        'jump3': pygame.image.load('img/jump_03.png'),
+        'jump4': pygame.image.load('img/jump_04.png'),
+        'run1': pygame.image.load('img/run_01.png'),
+        'run2': pygame.image.load('img/run_02.png'),
+        'run3': pygame.image.load('img/run_03.png'),
+        'run4': pygame.image.load('img/run_04.png'),
         'spikes': pygame.image.load('img/spikes.png'),
         'rock': pygame.image.load('img/RockRollingImages/00.png'),
         'rock2': pygame.image.load('img/RockRollingImages/01.png'),
@@ -171,8 +179,6 @@ def main():
     currentImage = 0
     # PLAYERIMAGES = [IMAGESDICT['princess']]
     
-    
-
     startScreen() # function which shows the start menu
 
     runGame()
@@ -191,7 +197,7 @@ def runGame():
     # Initialize the player object
     p = player.Player(
         (HALF_WINWIDTH,HALF_WINHEIGHT),
-        (25,25),
+        (40,100),
         IMAGESDICT['player']
         )
     
@@ -242,10 +248,12 @@ def runGame():
 
     slipTimeElapsed = BANANA_PEEL_INIT_SLIP_TIME
     
+    # Initialize moving variables
     moveLeft  = False
     moveRight = False
     moveUp    = False
     moveDown  = False
+
 
     # parse the level map
     level_map = tiledtmxloader.tmxreader.TileMapParser().parse_decode('testlevel.tmx')
@@ -278,7 +286,17 @@ def runGame():
     # set initial cam position and size
     renderer.set_camera_position_and_size(cam_x, cam_y, WINWIDTH, WINHEIGHT)
 
+    frame_count = 0
+    
     while True: # main game loop
+
+        sprite_layers[1].remove_sprite(player_sprite)
+        player_sprite = p.get_sprite()
+        sprite_layers[1].add_sprite(player_sprite)
+        
+        # reset applicable variables
+        step_x = 0
+        step_y = 0
 
         # This loop will handle all of the player input events
         for event in pygame.event.get():
@@ -311,37 +329,70 @@ def runGame():
                     moveDown = False            
                 elif event.key == K_ESCAPE:
                         terminate()
-
+        '''
+            All the jumping and gravity is handled here.
+            If the player is jumping we move them up, other wise they are moving down (gravity).
+            We can alter how quickly the player jumps by altering the moverate or jump duration.
+        '''
         if p.isJumping():
             t = pygame.time.get_ticks() - jumpingStart
             if t > JUMPING_DURATION:
                 p.jumping = False
-                jumpHeight = 0
-            else:
-                jumpHeight = jumpHeightAtTime(t)
-            p.y = floorY() - jumpHeight
+                p.change_sprite(
+                IMAGESDICT['jump1']
+                )
+            elif t > JUMPING_DURATION / 2:
+                p.change_sprite(
+                IMAGESDICT['jump4']
+                )
+            step_y -= MOVERATE
+        else:
+            p.change_sprite(
+                IMAGESDICT['jump3']
+                )
+            step_y += MOVERATE
         
         # actually move the player
         if moveLeft:
-            p.x -= MOVERATE
+            step_x -= MOVERATE
         if moveRight:
-            p.x += MOVERATE
+            step_x += MOVERATE
+            if not p.jumping:
+                if frame_count is 20:
+                    p.change_sprite(
+                    IMAGESDICT['run1']
+                    )
+                elif frame_count is 40:
+                    p.change_sprite(
+                    IMAGESDICT['run2']
+                    )
+                elif frame_count is 60:
+                    p.change_sprite(
+                    IMAGESDICT['run3']
+                    )
+                elif frame_count is 80:
+                    p.change_sprite(
+                    IMAGESDICT['run4']
+                    )
+                if frame_count > 80:
+                    frame_count = 0
         if moveUp:
             if not p.isJumping():
                 p.jumping = True
+                p.change_sprite(
+                IMAGESDICT['jump2']
+                )
                 jumpingStart = pygame.time.get_ticks()
-        if moveDown:
-            #p.y += MOVERATE
-            pass
 
-        # this should simulate constant gravity
-        # step_y = MOVERATE
+        step_x, step_y = check_collision(p,step_x,step_y,sprite_layers[COLL_LAYER])
 
-        step_y = check_collision(p,12,sprite_layers[COLL_LAYER])
+        # Apply the steps to the player and the player rect
+        p.x += step_x
         p.y += step_y
 
         player_sprite.rect.midbottom = (p.x, p.y)        
         
+        # Set the new camera position
         renderer.set_camera_position(HALF_WINWIDTH, HALF_WINHEIGHT)
 
         # Draw the background
@@ -431,6 +482,7 @@ def runGame():
                 else:
                     SCREEN.blit(spiderAnimation[1], obstacleObjs[i].get_rect())                
                 pygame.draw.rect(SCREEN, GRAY_1, obstacleObjs[i].getWebStringRect())
+            # Checking if the object represents the mud
             elif isinstance(obstacleObjs[i], AI.mud):
                 obstacleObjs[i].setFrameRate(MUD_FRAME_RATE)
                 if (obstacleObjs[i].doMudAction(MUD_FRAME_RATE)):
@@ -441,7 +493,9 @@ def runGame():
             else:
                 SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())                                        
                 
-            
+                    
+        frame_count += 1
+
         pygame.display.update()
         FPSCLOCK.tick()
 
@@ -488,7 +542,7 @@ def startScreen():
         pygame.display.update()
         FPSCLOCK.tick()
 
-def check_collision(player,step_y,coll_layer):
+def check_collision(player,step_x,step_y,coll_layer):
     # find the tile location of the player
     tile_x = int((player.x) // coll_layer.tilewidth)
     tile_y = int((player.y) // coll_layer.tileheight)
@@ -501,18 +555,25 @@ def check_collision(player,step_y,coll_layer):
                 tile_rects.append(coll_layer.content2D[tile_y + diry][tile_x + dirx].rect)
 
     # save the original steps and return them if not canceled
-    #res_step_x = step_x
+    res_step_x = step_x
     res_step_y = step_y
 
+    step_x  = special_round(step_x)
+    if step_x != 0:
+        if player.get_rect().move(step_x, 0).collidelist(tile_rects) > -1:
+            res_step_x = 0
+    
     # y direction, floor or ceil depending on the sign of the step
     step_y = special_round(step_y)
 
     # detect a collision and dont move in y direction if colliding
     if player.get_rect().move(0, step_y).collidelist(tile_rects) > -1:
+        if player.isJumping() and step_y < 0:
+            player.jumping = False;
         res_step_y = 0
 
     # return the step the hero should do
-    return res_step_y
+    return res_step_x, res_step_y
 
 def special_round(value):
     """
