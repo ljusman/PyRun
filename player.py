@@ -27,6 +27,27 @@ class Player:
     def isJumping(self):
         return self.jumping
 
+    # Is the player touching a particular object?
+    def isTouching(self, x, y, endYRange):
+        '''
+            Here, we are fundamentally checking to see
+            whether or not the player is in a certain
+            rectangular boundary (x, y, width, height) of
+            the target object.
+        '''
+        '''
+            The first check checks whether or not the object
+            is within the horizontal boundaries of the player.
+        '''    
+        if (int(x) in range(int(self.x), int(self.x + self.width))):
+            '''
+                Here, we check for whether or not the object's bottom is at
+                the same level as (or below) the player's top y coordinate.
+            '''    
+            if (int(endYRange) >= int(self.y)):
+                return True        
+        return False
+    
     def get_rect(self):
         return pygame.Rect((self.x, self.y, self.width, self.height))
 
