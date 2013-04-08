@@ -183,6 +183,41 @@ def main():
 
     runGame()
 
+def initializeLevel(file_name, player_layer, player):
+
+     # parse the level map
+    level_map = tiledtmxloader.tmxreader.TileMapParser().parse_decode(file_name)
+
+    # load the images using pygame
+    resources = tiledtmxloader.helperspygame.ResourceLoaderPygame()
+    resources.load(level_map)
+
+    # prepare map rendering
+    assert level_map.orientation == "orthogonal"
+
+    # renderer
+    renderer = tiledtmxloader.helperspygame.RendererPygame()
+
+    # retrieve the layers
+    sprite_layers = tiledtmxloader.helperspygame.get_layers_from_map(resources)
+
+    # filter layers
+    sprite_layers = [layer for layer in sprite_layers if not layer.is_object_group]
+
+    # craete player sprite with which we'll work with
+    player_sprite = player.get_sprite()
+
+    # add player to the right layer
+    sprite_layers[player_layer].add_sprite(player_sprite)
+
+    cam_x = HALF_WINWIDTH
+    cam_y = HALF_WINHEIGHT
+
+    # set initial cam position and size
+    renderer.set_camera_position_and_size(cam_x, cam_y, WINWIDTH, WINHEIGHT)
+
+    return sprite_layers, player_sprite, player_layer, renderer
+
 def runGame():
     '''
         Set up initial player object.    
@@ -254,37 +289,7 @@ def runGame():
     moveUp    = False
     moveDown  = False
 
-
-    # parse the level map
-    level_map = tiledtmxloader.tmxreader.TileMapParser().parse_decode('testlevel.tmx')
-
-    # load the images using pygame
-    resources = tiledtmxloader.helperspygame.ResourceLoaderPygame()
-    resources.load(level_map)
-
-    # prepare map rendering
-    assert level_map.orientation == "orthogonal"
-
-    # renderer
-    renderer = tiledtmxloader.helperspygame.RendererPygame()
-
-    # retrieve the layers
-    sprite_layers = tiledtmxloader.helperspygame.get_layers_from_map(resources)
-
-    # filter layers
-    sprite_layers = [layer for layer in sprite_layers if not layer.is_object_group]
-
-    # craete player sprite with which we'll work with
-    player_sprite = p.get_sprite()
-
-    # add player to the right layer
-    sprite_layers[1].add_sprite(player_sprite)
-
-    cam_x = HALF_WINWIDTH
-    cam_y = HALF_WINHEIGHT
-
-    # set initial cam position and size
-    renderer.set_camera_position_and_size(cam_x, cam_y, WINWIDTH, WINHEIGHT)
+    sprite_layers, player_sprite, player_layer, renderer = initializeLevel('testlevel.tmx',1,p)
 
     frame_count = 0
     
