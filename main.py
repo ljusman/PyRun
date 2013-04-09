@@ -238,6 +238,10 @@ def runGame(MAP_NUMBER):
         IMAGESDICT['player']
         )
 
+    # initialize camera variables
+    cam_x = HALF_WINWIDTH
+    cam_y = HALF_WINHEIGHT
+
     ROCK_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['rock'], ROCK_BALL_SIZE)
     ROCK_IMG_SCALE_2 = pygame.transform.smoothscale(IMAGESDICT['rock2'], ROCK_BALL_SIZE)
     ROCK_IMG_SCALE_3 = pygame.transform.smoothscale(IMAGESDICT['rock3'], ROCK_BALL_SIZE)
@@ -298,6 +302,7 @@ def runGame(MAP_NUMBER):
 
     while True: # main game loop
 
+        # update player sprite
         sprite_layers[1].remove_sprite(player_sprite)
         player_sprite = p.get_sprite()
         sprite_layers[1].add_sprite(player_sprite)
@@ -403,7 +408,7 @@ def runGame(MAP_NUMBER):
         player_sprite.rect.midbottom = (p.x, p.y)
 
         # Set the new camera position
-        renderer.set_camera_position(HALF_WINWIDTH, HALF_WINHEIGHT)
+        renderer.set_camera_position_and_size(cam_x, cam_y, WINWIDTH, WINHEIGHT)
 
         # Draw the background
         SCREEN.fill((0, 0, 0))
@@ -505,6 +510,8 @@ def runGame(MAP_NUMBER):
                # SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())
 
         '''
+
+        cam_x += 1
         frame_count += 1
 
         pygame.display.update()
