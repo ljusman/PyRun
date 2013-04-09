@@ -22,6 +22,8 @@ RIGHT   = 'right'
 TILEMAP_WIDTH = 32
 TILEMAP_LENGTH = 24
 TILE_SIZE = 25
+PLAYER_WIDTH = 40
+PLAYER_HEIGHT = 105
 
 COLL_LAYER = 2 # The sprite layer which contains the collision map
 
@@ -232,7 +234,7 @@ def runGame():
     # Initialize the player object
     p = player.Player(
         (HALF_WINWIDTH,HALF_WINHEIGHT),
-        (40,100),
+        (PLAYER_WIDTH,PLAYER_HEIGHT),
         IMAGESDICT['player']
         )
     
@@ -352,7 +354,7 @@ def runGame():
                 )
             if t < JUMPING_DURATION and t > 0:
                 step_y -= MOVERATE
-        elif not p.isJumping() and not p.isOnGround():
+        elif not p.isJumping():
             step_y += MOVERATE
         
         # actually move the player
@@ -380,15 +382,18 @@ def runGame():
                 if frame_count > 80:
                     frame_count = 0
         if moveUp:
-            if not p.isJumping():
+            if not p.isJumping() and p.isOnGround():
                 p.jumping = True
                 p.onGround = False
                 p.change_sprite(
                 IMAGESDICT['jump2']
                 )
                 jumpingStart = pygame.time.get_ticks()
-
+                step_y -= MOVERATE
+        
         step_x, step_y = check_collision(p,step_x,step_y,sprite_layers[COLL_LAYER])
+        
+
 
         # Apply the steps to the player and the player rect
         p.x += step_x
@@ -548,29 +553,39 @@ def startScreen():
 
 def check_collision(player,step_x,step_y,coll_layer):
     # find the tile location of the player
-    tile_x = int((player.x) // coll_layer.tilewidth)
-    tile_y = int((player.y) // coll_layer.tileheight)
-    
+    tile_x_left = int((player.get_rect().left) // coll_layer.tilewidth)
+    tile_x_right = int((player.get_rect().right) // coll_layer.tilewidth)
+    tile_y_bottom = int((player.get_rect().bottom) // coll_layer.tileheight)
+    tile_y_top = int((player.get_rect().top) // coll_layer.tileheight)
+    #print tile_x, tile_y
+    # Create local player rect to work with
+    rect = player.get_rect()
     # find the tiles around the hero and extract their rects for collision
     tile_rects = []
-    for diry in (-1,0, 1):
-        for dirx in (-1,0,1):
-            if coll_layer.content2D[tile_y + diry][tile_x + dirx] is not None:
-                tile_rects.append(coll_layer.content2D[tile_y + diry][tile_x + dirx].rect)
-
+    for tile_x in (tile_x_left,tile_x_right):
+        for tile_y in (tile_y_top, tile_y_bottom):
+            for diry in (-1,0, 1):
+                for dirx in (-1,0,1):
+                    if coll_layer.content2D[tile_y + diry][tile_x + dirx] is not None:
+                        tile_rects.append(coll_layer.content2D[tile_y + diry][tile_x + dirx].rect)
+                    if coll_layer.content2D[tile_y + diry][tile_x + dirx] is not None:
+                        tile_rects.append(coll_layer.content2D[tile_y+ diry][tile_x + dirx].rect)
+            
     # save the original steps and return them if not canceled
     res_step_x = step_x
     res_step_y = step_y
 
     step_x  = special_round(step_x)
-    if step_x != 0 and player.get_rect().move(step_x, 0).collidelist(tile_rects) > -1:
+    if step_x != 0 and rect.move(step_x, 0).collidelist(tile_rects) > -1:
         res_step_x = 0
     
+    # reset player rect
+    rect = player.get_rect()
     # y direction, floor or ceil depending on the sign of the step
-    #step_y = special_round(step_y)
+    step_y = special_round(step_y)
 
     # detect a collision and dont move in y direction if colliding
-    if step_y != 0 and player.get_rect().move(0, step_y).collidelist(tile_rects) > -1:
+    if step_y != 0 and rect.move(0, step_y).collidelist(tile_rects) > -1:
         if player.isJumping():
             player.jumping = False;
             print 'Collision detected, isJumping'
@@ -578,8 +593,10 @@ def check_collision(player,step_x,step_y,coll_layer):
             print 'Collision detected, hit ground'
             player.change_sprite(IMAGESDICT['player'])
             player.onGround = True;
+        else:
+            print 'Collision detected, not ground, not jumping'
         res_step_y = 0
-    print step_y, res_step_y
+
     # return the step the hero should do
     return res_step_x, res_step_y
 
