@@ -22,6 +22,8 @@ RIGHT   = 'right'
 TILEMAP_WIDTH = 32
 TILEMAP_LENGTH = 24
 TILE_SIZE = 25
+PLAYER_WIDTH = 40
+PLAYER_HEIGHT = 105
 
 COLL_LAYER = 2 # The sprite layer which contains the collision map
 
@@ -183,6 +185,41 @@ def main():
 
     runGame()
 
+def initializeLevel(file_name, player_layer, player):
+
+     # parse the level map
+    level_map = tiledtmxloader.tmxreader.TileMapParser().parse_decode(file_name)
+
+    # load the images using pygame
+    resources = tiledtmxloader.helperspygame.ResourceLoaderPygame()
+    resources.load(level_map)
+
+    # prepare map rendering
+    assert level_map.orientation == "orthogonal"
+
+    # renderer
+    renderer = tiledtmxloader.helperspygame.RendererPygame()
+
+    # retrieve the layers
+    sprite_layers = tiledtmxloader.helperspygame.get_layers_from_map(resources)
+
+    # filter layers
+    sprite_layers = [layer for layer in sprite_layers if not layer.is_object_group]
+
+    # craete player sprite with which we'll work with
+    player_sprite = player.get_sprite()
+
+    # add player to the right layer
+    sprite_layers[player_layer].add_sprite(player_sprite)
+
+    cam_x = HALF_WINWIDTH
+    cam_y = HALF_WINHEIGHT
+
+    # set initial cam position and size
+    renderer.set_camera_position_and_size(cam_x, cam_y, WINWIDTH, WINHEIGHT)
+
+    return sprite_layers, player_sprite, player_layer, renderer
+
 def runGame():
     '''
         Set up initial player object.    
@@ -197,7 +234,7 @@ def runGame():
     # Initialize the player object
     p = player.Player(
         (HALF_WINWIDTH,HALF_WINHEIGHT),
-        (40,100),
+        (PLAYER_WIDTH,PLAYER_HEIGHT),
         IMAGESDICT['player']
         )
     
@@ -253,37 +290,7 @@ def runGame():
     moveUp    = False
     moveDown  = False
 
-
-    # parse the level map
-    level_map = tiledtmxloader.tmxreader.TileMapParser().parse_decode('testlevel.tmx')
-
-    # load the images using pygame
-    resources = tiledtmxloader.helperspygame.ResourceLoaderPygame()
-    resources.load(level_map)
-
-    # prepare map rendering
-    assert level_map.orientation == "orthogonal"
-
-    # renderer
-    renderer = tiledtmxloader.helperspygame.RendererPygame()
-
-    # retrieve the layers
-    sprite_layers = tiledtmxloader.helperspygame.get_layers_from_map(resources)
-
-    # filter layers
-    sprite_layers = [layer for layer in sprite_layers if not layer.is_object_group]
-
-    # craete player sprite with which we'll work with
-    player_sprite = p.get_sprite()
-
-    # add player to the right layer
-    sprite_layers[1].add_sprite(player_sprite)
-
-    cam_x = HALF_WINWIDTH
-    cam_y = HALF_WINHEIGHT
-
-    # set initial cam position and size
-    renderer.set_camera_position_and_size(cam_x, cam_y, WINWIDTH, WINHEIGHT)
+    sprite_layers, player_sprite, player_layer, renderer = initializeLevel('testlevel.tmx',1,p)
 
     frame_count = 0
     
@@ -344,11 +351,9 @@ def runGame():
                 p.change_sprite(
                 IMAGESDICT['jump4']
                 )
-            step_y -= MOVERATE
-        else:
-            p.change_sprite(
-                IMAGESDICT['jump3']
-                )
+            if t < JUMPING_DURATION and t > 0:
+                step_y -= MOVERATE
+        elif not p.isJumping():
             step_y += MOVERATE
         
         # actually move the player
@@ -356,7 +361,7 @@ def runGame():
             step_x -= MOVERATE
         if moveRight:
             step_x += MOVERATE
-            if not p.jumping:
+            if not p.isJumping():
                 if frame_count is 20:
                     p.change_sprite(
                     IMAGESDICT['run1']
@@ -376,14 +381,18 @@ def runGame():
                 if frame_count > 80:
                     frame_count = 0
         if moveUp:
-            if not p.isJumping():
+            if not p.isJumping() and p.isOnGround():
                 p.jumping = True
+                p.onGround = False
                 p.change_sprite(
                 IMAGESDICT['jump2']
                 )
                 jumpingStart = pygame.time.get_ticks()
-
+                step_y -= MOVERATE
+        
         step_x, step_y = check_collision(p,step_x,step_y,sprite_layers[COLL_LAYER])
+        
+
 
         # Apply the steps to the player and the player rect
         p.x += step_x
@@ -543,32 +552,48 @@ def startScreen():
 
 def check_collision(player,step_x,step_y,coll_layer):
     # find the tile location of the player
-    tile_x = int((player.x) // coll_layer.tilewidth)
-    tile_y = int((player.y) // coll_layer.tileheight)
-    
+    tile_x_left = int((player.get_rect().left) // coll_layer.tilewidth)
+    tile_x_right = int((player.get_rect().right) // coll_layer.tilewidth)
+    tile_y_bottom = int((player.get_rect().bottom) // coll_layer.tileheight)
+    tile_y_top = int((player.get_rect().top) // coll_layer.tileheight)
+    #print tile_x, tile_y
+    # Create local player rect to work with
+    rect = player.get_rect()
     # find the tiles around the hero and extract their rects for collision
     tile_rects = []
-    for diry in (-1,0, 1):
-        for dirx in (-1,0,1):
-            if coll_layer.content2D[tile_y + diry][tile_x + dirx] is not None:
-                tile_rects.append(coll_layer.content2D[tile_y + diry][tile_x + dirx].rect)
-
+    for tile_x in (tile_x_left,tile_x_right):
+        for tile_y in (tile_y_top, tile_y_bottom):
+            for diry in (-1,0, 1):
+                for dirx in (-1,0,1):
+                    if coll_layer.content2D[tile_y + diry][tile_x + dirx] is not None:
+                        tile_rects.append(coll_layer.content2D[tile_y + diry][tile_x + dirx].rect)
+                    if coll_layer.content2D[tile_y + diry][tile_x + dirx] is not None:
+                        tile_rects.append(coll_layer.content2D[tile_y+ diry][tile_x + dirx].rect)
+            
     # save the original steps and return them if not canceled
     res_step_x = step_x
     res_step_y = step_y
 
     step_x  = special_round(step_x)
-    if step_x != 0:
-        if player.get_rect().move(step_x, 0).collidelist(tile_rects) > -1:
-            res_step_x = 0
+    if step_x != 0 and rect.move(step_x, 0).collidelist(tile_rects) > -1:
+        res_step_x = 0
     
+    # reset player rect
+    rect = player.get_rect()
     # y direction, floor or ceil depending on the sign of the step
     step_y = special_round(step_y)
 
     # detect a collision and dont move in y direction if colliding
-    if player.get_rect().move(0, step_y).collidelist(tile_rects) > -1:
-        if player.isJumping() and step_y < 0:
+    if step_y != 0 and rect.move(0, step_y).collidelist(tile_rects) > -1:
+        if player.isJumping():
             player.jumping = False;
+            print 'Collision detected, isJumping'
+        elif step_y > 0:
+            print 'Collision detected, hit ground'
+            player.change_sprite(IMAGESDICT['player'])
+            player.onGround = True;
+        else:
+            print 'Collision detected, not ground, not jumping'
         res_step_y = 0
 
     # return the step the hero should do
