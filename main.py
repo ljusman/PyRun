@@ -1,4 +1,4 @@
-import random, copy, math, os, pygame, sys, player, AI, tiledtmxloader
+import random, copy, math, os, pygame, sys, player, AI, tiledtmxloader, MENU
 from pygame.locals import *
 
 FPS = 30 # frames per second to update the SCREEN
@@ -30,7 +30,7 @@ COLL_LAYER = 2 # The sprite layer which contains the collision map
 JUMPING_DURATION = 500      # milliseconds
 HORZ_MOVE_INCREMENT = 4     # pixels
 TIME_AT_PEAK = JUMPING_DURATION / 2
-JUMP_HEIGHT = 200           # pixels
+JUMP_HEIGHT = 100           # pixels
 
 # Here is the place to define constants for AI implementation...
 ROCK_BALL_POSITION = ((WINWIDTH - 400), (HALF_WINHEIGHT - 200))
@@ -110,11 +110,11 @@ def blit_alpha(screenSurface, source, location, opacity):
         temp = pygame.Surface((source.get_width(), source.get_height())).convert()
         temp.blit(screenSurface, (-x, -y))
         temp.blit(source, (0, 0))
-        temp.set_alpha(opacity)        
+        temp.set_alpha(opacity)
         screenSurface.blit(temp, location)
 
 # A function for creating obstacles
-def makeObstacle(obstacleChoice, position, size, image, direction = 'left'):    
+def makeObstacle(obstacleChoice, position, size, image, direction = 'left'):
     if (obstacleChoice == 'Spikes'):
         return AI.spikes(position, size, image)
     elif (obstacleChoice == 'Log'):
@@ -133,8 +133,8 @@ def makeObstacle(obstacleChoice, position, size, image, direction = 'left'):
         return AI.mud(position, size, image)
     else:
         return AI.Obstacle((0,0), (0,0), pygame.Surface((0, 0)))
-            
-    
+
+
 def main():
     global FPSCLOCK, SCREEN, IMAGESDICT, BASICFONT, PLAYERIMAGES, currentImage
     # Pygame initialization and basic set up of the global variables
@@ -163,7 +163,7 @@ def main():
         'rock': pygame.image.load('img/RockRollingImages/00.png'),
         'rock2': pygame.image.load('img/RockRollingImages/01.png'),
         'rock3': pygame.image.load('img/RockRollingImages/02.png'),
-        'rock4': pygame.image.load('img/RockRollingImages/03.png'),                                
+        'rock4': pygame.image.load('img/RockRollingImages/03.png'),
         'banana_peel': pygame.image.load('img/peel.png'),
         'snake': pygame.image.load('img/SnakeMovingImages/snake.png'),
         'snake2': pygame.image.load('img/SnakeMovingImages/snake2.png'),
@@ -174,16 +174,16 @@ def main():
         'log': pygame.image.load('img/log.png'),
         'mud': pygame.image.load('img/MudSplashingImages/mud.png'),
         'mud2': pygame.image.load('img/MudSplashingImages/mud_sp.png')
-        }    
+        }
 
     # PLAYERIMAGES is a list of all possible characters the player can be.
     # currentImage is the index of the player's current player image.
     currentImage = 0
     # PLAYERIMAGES = [IMAGESDICT['princess']]
-    
-    startScreen() # function which shows the start menu
 
-    runGame()
+    Map_Num = startScreen() # function which shows the start menu
+
+    runGame(Map_Num) # run the game
 
 def initializeLevel(file_name, player_layer, player):
 
@@ -220,9 +220,9 @@ def initializeLevel(file_name, player_layer, player):
 
     return sprite_layers, player_sprite, player_layer, renderer
 
-def runGame():
+def runGame(MAP_NUMBER):
     '''
-        Set up initial player object.    
+        Set up initial player object.
         This object contains the following keys:
             surface: the image of the player
             facing: the direction the player is facing
@@ -237,12 +237,12 @@ def runGame():
         (PLAYER_WIDTH,PLAYER_HEIGHT),
         IMAGESDICT['player']
         )
-    
+
     ROCK_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['rock'], ROCK_BALL_SIZE)
     ROCK_IMG_SCALE_2 = pygame.transform.smoothscale(IMAGESDICT['rock2'], ROCK_BALL_SIZE)
     ROCK_IMG_SCALE_3 = pygame.transform.smoothscale(IMAGESDICT['rock3'], ROCK_BALL_SIZE)
     ROCK_IMG_SCALE_4 = pygame.transform.smoothscale(IMAGESDICT['rock4'], ROCK_BALL_SIZE)
-    BANANA_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['banana_peel'], BANANA_PEEL_SIZE) 
+    BANANA_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['banana_peel'], BANANA_PEEL_SIZE)
     SPIKES_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['spikes'], SPIKES_SIZE)
     SNAKE_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['snake'], SNAKE_SIZE)
     SNAKE_IMG_SCALE_2 = pygame.transform.smoothscale(IMAGESDICT['snake2'], SNAKE_SIZE_2)
@@ -254,7 +254,7 @@ def runGame():
     MUD_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['mud'], MUD_SIZE)
     MUD_IMG_SCALE_2 = pygame.transform.smoothscale(IMAGESDICT['mud2'], MUD_SIZE_2)
 
-    # Animations for various AI    
+    # Animations for various AI
     snakeAnimation = [SNAKE_IMG_SCALE, SNAKE_IMG_SCALE_2]
     birdAnimation = [BIRD_IMG_SCALE, BIRD_IMG_SCALE_2]
     spiderAnimation = [SPIDER_IMG_SCALE, SPIDER_IMG_SCALE_2]
@@ -267,10 +267,10 @@ def runGame():
         ROCK_IMG_SCALE,
         LEFT
         )
-    
+
     # For storing our obstacles
     obstacleObjs = []
-    
+
     obstacleObjs.append(makeObstacle('Giant rock', ROCK_BALL_POSITION, ROCK_BALL_SIZE, ROCK_IMG_SCALE))
     obstacleObjs.append(makeObstacle('Spikes', SPIKES_POSITION, SPIKES_SIZE, SPIKES_IMG_SCALE))
     obstacleObjs.append(makeObstacle('Snake', SNAKE_POSITION, SNAKE_SIZE, SNAKE_IMG_SCALE))
@@ -280,26 +280,28 @@ def runGame():
     obstacleObjs.append(makeObstacle('Banana peel', BANANA_PEEL_POSITION, BANANA_PEEL_SIZE, BANANA_IMG_SCALE))
     obstacleObjs.append(makeObstacle('Mud', MUD_POSITION, MUD_SIZE, MUD_IMG_SCALE))
 
-    ballImage = pygame.transform.scale(IMAGESDICT['rock'], ROCK_BALL_SIZE)   
+    ballImage = pygame.transform.scale(IMAGESDICT['rock'], ROCK_BALL_SIZE)
 
     slipTimeElapsed = BANANA_PEEL_INIT_SLIP_TIME
-    
+
     # Initialize moving variables
     moveLeft  = False
     moveRight = False
     moveUp    = False
     moveDown  = False
 
-    sprite_layers, player_sprite, player_layer, renderer = initializeLevel('testlevel.tmx',1,p)
-
+    if MAP_NUMBER == 0:
+        sprite_layers, player_sprite, player_layer, renderer = initializeLevel('SandLevel.tmx',1,p)
+    elif MAP_NUMBER == 1:
+	   sprite_layers, player_sprite, player_layer, renderer = initializeLevel('testlevel.tmx',1,p)
     frame_count = 0
-    
+
     while True: # main game loop
 
         sprite_layers[1].remove_sprite(player_sprite)
         player_sprite = p.get_sprite()
         sprite_layers[1].add_sprite(player_sprite)
-        
+
         # reset applicable variables
         step_x = 0
         step_y = 0
@@ -332,7 +334,7 @@ def runGame():
                 elif event.key in (K_UP, K_w, K_SPACE):
                     moveUp = False
                 elif event.key in (K_DOWN, K_s):
-                    moveDown = False            
+                    moveDown = False
                 elif event.key == K_ESCAPE:
                         terminate()
         '''
@@ -355,7 +357,7 @@ def runGame():
                 step_y -= MOVERATE
         elif not p.isJumping():
             step_y += MOVERATE
-        
+
         # actually move the player
         if moveLeft:
             step_x -= MOVERATE
@@ -389,24 +391,24 @@ def runGame():
                 )
                 jumpingStart = pygame.time.get_ticks()
                 step_y -= MOVERATE
-        
+
         step_x, step_y = check_collision(p,step_x,step_y,sprite_layers[COLL_LAYER])
-        
+
 
 
         # Apply the steps to the player and the player rect
         p.x += step_x
         p.y += step_y
 
-        player_sprite.rect.midbottom = (p.x, p.y)        
-        
+        player_sprite.rect.midbottom = (p.x, p.y)
+
         # Set the new camera position
         renderer.set_camera_position(HALF_WINWIDTH, HALF_WINHEIGHT)
 
         # Draw the background
-        SCREEN.fill((0, 0, 0))    
-                    
-        
+        SCREEN.fill((0, 0, 0))
+
+
         # render the map including the player
         for sprite_layer in sprite_layers:
             if sprite_layer.is_object_group:
@@ -415,13 +417,13 @@ def runGame():
                 continue
             else:
                 renderer.render_layer(SCREEN, sprite_layer)
-        
-        ''' Collision debugging '''
+
+        # Collision debugging
         # pygame.draw.rect(SCREEN, (0, 0, 0), (p.x, p.y, p.width, p.height))
         # pygame.draw.rect(SCREEN, (0, 0, 0), (obstacleObjs[0].xPos, obstacleObjs[0].yPos, obstacleObjs[0].width, obstacleObjs[0].height))
         # pygame.draw.rect(SCREEN, (255, 0, 255), (obstacleObjs[1].xPos, obstacleObjs[1].yPos, obstacleObjs[1].width, obstacleObjs[1].height))
 
-                
+
         '''
             We need specific drawing cases for different obstacles,
             since every obstacle could have different methods
@@ -431,30 +433,31 @@ def runGame():
         '''
             Here, we have backwards-list checking to avoid a common object
             deletion mistake.
-        ''' 
+        '''
+        '''
         for i in range(len(obstacleObjs) - 1, -1, -1):
             # Player collision checking with the obstacles.
             if p.isTouching(obstacleObjs[i].xPos, obstacleObjs[i].yPos, obstacleObjs[i].yPos + obstacleObjs[i].height):
                 soundObj = pygame.mixer.Sound('Sounds/Spikes.wav')
                 soundObj.play()
-            ''' Collision boundary drawing (for debug) '''
+            # Collision boundary drawing (for debug)
             # pygame.draw.rect(SCREEN, GRAY_1, (obstacleObjs[i].xPos, obstacleObjs[i].yPos, obstacleObjs[i].width, obstacleObjs[i].height))
             # Checking if a particular object is a rock.
             if isinstance(obstacleObjs[i], AI.giantRock):
                 obstacleObjs[i].setSpeed(ROCK_SPEED)
                 obstacleObjs[i].doGiantRockAction(p, floorY(), ROCK_GRAVITY, WINWIDTH)
-                # CHOPPED_ROCK = pygame.transform.rotozoom(obstacleObjs[i].image, obstacleObjs[i].giantRockRotate(ROCK_ROTATE_INCREMENT), 2.0)               
-                # CHOPPED_ROCK = pygame.transform.scale(CHOPPED_ROCK, obstacleObjs[i].image.get_size())                                
-                SCREEN.blit(rockAnimation[obstacleObjs[i].animateToNext(2, 8)], obstacleObjs[i].get_rect())                            
+                # CHOPPED_ROCK = pygame.transform.rotozoom(obstacleObjs[i].image, obstacleObjs[i].giantRockRotate(ROCK_ROTATE_INCREMENT), 2.0)
+                # CHOPPED_ROCK = pygame.transform.scale(CHOPPED_ROCK, obstacleObjs[i].image.get_size())
+                SCREEN.blit(rockAnimation[obstacleObjs[i].animateToNext(2, 8)], obstacleObjs[i].get_rect())
             # Checking if a particular object is a banana peel.
             elif isinstance(obstacleObjs[i], AI.bananaPeel):
                 obstacleObjs[i].setHoriAndVertRiseSpeeds(BANANA_PEEL_HORI_RISE_SPEED, BANANA_PEEL_VERT_RISE_SPEED)
                 obstacleObjs[i].doBananaPeelAction(p, floorY(), ROCK_GRAVITY, BANANA_PEEL_TIME_TO_RISE, WINWIDTH)
-                BANANA_IMG_ROT = pygame.transform.rotate(obstacleObjs[i].image, obstacleObjs[i].slipRotate(floorY(), BANANA_ROTATE_FIRST, BANANA_ROTATE_SECOND))            
+                BANANA_IMG_ROT = pygame.transform.rotate(obstacleObjs[i].image, obstacleObjs[i].slipRotate(floorY(), BANANA_ROTATE_FIRST, BANANA_ROTATE_SECOND))
                 blit_alpha(SCREEN, BANANA_IMG_ROT, obstacleObjs[i].get_rect(), obstacleObjs[i].doFadeOutBananaPeel(BANANA_PEEL_FADE_DECREMENT))
                 # Has the banana peel faded to 0 after being slipped on?
                 # (This check has been validated)
-                if obstacleObjs[i].getBananaPeelFadeAmount() <= 0:                    
+                if obstacleObjs[i].getBananaPeelFadeAmount() <= 0:
                     del obstacleObjs[i]
             # Checking if a particular object represents the spikes
             # elif isinstance(obstacleObjs[i], AI.spikes):
@@ -486,22 +489,22 @@ def runGame():
             elif isinstance(obstacleObjs[i], AI.spider):
                 obstacleObjs[i].setFrameRate(SPIDER_FRAME_RATE)
                 if (obstacleObjs[i].doSpiderAction(SPIDER_SPEED)):
-                    SCREEN.blit(spiderAnimation[0], obstacleObjs[i].get_rect())                    
+                    SCREEN.blit(spiderAnimation[0], obstacleObjs[i].get_rect())
                 else:
-                    SCREEN.blit(spiderAnimation[1], obstacleObjs[i].get_rect())                
+                    SCREEN.blit(spiderAnimation[1], obstacleObjs[i].get_rect())
                 pygame.draw.rect(SCREEN, GRAY_1, obstacleObjs[i].getWebStringRect())
             # Checking if the object represents the mud
             elif isinstance(obstacleObjs[i], AI.mud):
                 obstacleObjs[i].setFrameRate(MUD_FRAME_RATE)
                 if (obstacleObjs[i].doMudAction(MUD_FRAME_RATE)):
-                    SCREEN.blit(mudAnimation[0], obstacleObjs[i].get_rect())                    
+                    SCREEN.blit(mudAnimation[0], obstacleObjs[i].get_rect())
                 else:
-                    SCREEN.blit(mudAnimation[1], obstacleObjs[i].get_rect()) 
+                    SCREEN.blit(mudAnimation[1], obstacleObjs[i].get_rect())
             # Default for drawing any other obstacles
             # else:
-               # SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())                                        
-                
-                    
+               # SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())
+
+        '''
         frame_count += 1
 
         pygame.display.update()
@@ -515,40 +518,50 @@ def startScreen():
     titleRect.centerx = HALF_WINWIDTH
     topCoord += titleRect.height
 
-    # Unfortunately Pygame's font and text system only show one line at
-    # a time, so we can't use string with the \n newline characters in them.
-    # So we will use a list with each line in it,
-    instructionText = ['Arrow keys or WASD to move',
-                        'Esc to quit.']
+
 
     # Star with drawing a black color to the entire window
     SCREEN.fill(BGCOLOR)
 
     #Draw the title image to the window:
-    SCREEN.blit(IMAGESDICT['title'], titleRect)
+    SCREEN.blit(IMAGESDICT['title'], (0,0))
 
-    # Position and draw the text.
-    for i in range(len(instructionText)):
-        instSurf = BASICFONT.render(instructionText[i], 1, TEXTCOLOR)
-        instRect = instSurf.get_rect()
-        topCoord += 10 # 10 pixels will go in between each line of text.
-        instRect.top = topCoord
-        instRect.centerx = HALF_WINWIDTH
-        topCoord += instRect.height # Adjust for the height of the line.
-        SCREEN.blit(instSurf, instRect)
+    menu = MENU.Menu()#necessary
+    menu.set_colors((255,255,255), (0,0,255), (0,255,255))#optional
+    menu.set_fontsize(40)#optional
+    #menu.set_font('data/couree.fon')#optional
+    #menu.move_menu(0, 0)#optional, moves the list of choices BY (x,y)
+    menu.init(['Level 1','Level 2','Quit'], SCREEN)#necessary
+    #menu.move_menu(0, 0)#optional, moves the choice list TO (x,y)
+    menu.draw()#necessary
 
-    while True: # Main loop for the start screen.
+    pygame.key.set_repeat(199,69)#(delay,interval)
+    pygame.display.update()
+    while 1:
         for event in pygame.event.get():
-            if event.type == QUIT:
-                terminate()
-            elif event.type == KEYDOWN:
+            if event.type == KEYDOWN:
+                if event.key == K_UP:
+                    menu.draw(-1) #here is the Menu class function
+                if event.key == K_DOWN:
+                    menu.draw(1) #here is the Menu class function
+                if event.key == K_RETURN:
+                    if menu.get_position() == 0:#here is the Menu class function
+                        return 0;
+                    elif menu.get_position() == 1:#here is the Menu class function
+                        return 1;
+                    elif menu.get_position() == 2:#here is the Menu class function
+                        pygame.display.quit()
+                        sys.exit()
                 if event.key == K_ESCAPE:
-                    terminate()
-                return # user has pressed a key, so return.
+                    pygame.display.quit()
+                    sys.exit()
+                pygame.display.update()
+            elif event.type == QUIT:
+                pygame.display.quit()
+                sys.exit()
+        pygame.time.wait(8)
 
-        # Display the screen contents to the actual screen.
-        pygame.display.update()
-        FPSCLOCK.tick()
+
 
 def check_collision(player,step_x,step_y,coll_layer):
     # find the tile location of the player
@@ -556,7 +569,7 @@ def check_collision(player,step_x,step_y,coll_layer):
     tile_x_right = int((player.get_rect().right) // coll_layer.tilewidth)
     tile_y_bottom = int((player.get_rect().bottom) // coll_layer.tileheight)
     tile_y_top = int((player.get_rect().top) // coll_layer.tileheight)
-    #print tile_x, tile_y
+
     # Create local player rect to work with
     rect = player.get_rect()
     # find the tiles around the hero and extract their rects for collision
@@ -569,7 +582,7 @@ def check_collision(player,step_x,step_y,coll_layer):
                         tile_rects.append(coll_layer.content2D[tile_y + diry][tile_x + dirx].rect)
                     if coll_layer.content2D[tile_y + diry][tile_x + dirx] is not None:
                         tile_rects.append(coll_layer.content2D[tile_y+ diry][tile_x + dirx].rect)
-            
+
     # save the original steps and return them if not canceled
     res_step_x = step_x
     res_step_y = step_y
@@ -577,7 +590,11 @@ def check_collision(player,step_x,step_y,coll_layer):
     step_x  = special_round(step_x)
     if step_x != 0 and rect.move(step_x, 0).collidelist(tile_rects) > -1:
         res_step_x = 0
-    
+    elif step_x == 0 and rect.move(0, 0).collidelist(tile_rects) > -1:
+        res_step_x = -10
+    elif step_x == 0 and rect.move(0, 0).collidelist(tile_rects) > -1:
+        res_step_x = 10
+
     # reset player rect
     rect = player.get_rect()
     # y direction, floor or ceil depending on the sign of the step
@@ -587,14 +604,15 @@ def check_collision(player,step_x,step_y,coll_layer):
     if step_y != 0 and rect.move(0, step_y).collidelist(tile_rects) > -1:
         if player.isJumping():
             player.jumping = False;
-            print 'Collision detected, isJumping'
         elif step_y > 0:
-            print 'Collision detected, hit ground'
             player.change_sprite(IMAGESDICT['player'])
             player.onGround = True;
         else:
             print 'Collision detected, not ground, not jumping'
         res_step_y = 0
+    elif rect.move(0, 0).collidelist(tile_rects) > -1:
+        # Force the player to move up if stuck in an object
+        res_step_y = -15
 
     # return the step the hero should do
     return res_step_x, res_step_y
