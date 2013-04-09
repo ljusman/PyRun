@@ -233,8 +233,7 @@ def runGame():
     
     # For storing our obstacles
     obstacleObjs = []
-
-    # Append a ROCK ball and banana peel object to our list of objects
+    
     obstacleObjs.append(makeObstacle('Giant rock', ROCK_BALL_POSITION, ROCK_BALL_SIZE, ROCK_IMG_SCALE))
     obstacleObjs.append(makeObstacle('Spikes', SPIKES_POSITION, SPIKES_SIZE, SPIKES_IMG_SCALE))
     obstacleObjs.append(makeObstacle('Snake', SNAKE_POSITION, SNAKE_SIZE, SNAKE_IMG_SCALE))
