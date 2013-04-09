@@ -1,4 +1,4 @@
-import random, copy, math, os, pygame, sys, player, AI, tiledtmxloader
+import random, copy, math, os, pygame, sys, player, AI, tiledtmxloader, MENU
 from pygame.locals import *
 
 FPS = 30 # frames per second to update the SCREEN
@@ -30,7 +30,7 @@ COLL_LAYER = 2 # The sprite layer which contains the collision map
 JUMPING_DURATION = 500      # milliseconds
 HORZ_MOVE_INCREMENT = 4     # pixels
 TIME_AT_PEAK = JUMPING_DURATION / 2
-JUMP_HEIGHT = 200           # pixels
+JUMP_HEIGHT = 100           # pixels
 
 # Here is the place to define constants for AI implementation...
 ROCK_BALL_POSITION = ((WINWIDTH - 400), (HALF_WINHEIGHT - 200))
@@ -181,9 +181,9 @@ def main():
     currentImage = 0
     # PLAYERIMAGES = [IMAGESDICT['princess']]
 
-    startScreen() # function which shows the start menu
+    Map_Num = startScreen() # function which shows the start menu
 
-    runGame()
+    runGame(Map_Num) # run the game
 
 def initializeLevel(file_name, player_layer, player):
 
@@ -220,7 +220,7 @@ def initializeLevel(file_name, player_layer, player):
 
     return sprite_layers, player_sprite, player_layer, renderer
 
-def runGame():
+def runGame(MAP_NUMBER):
     '''
         Set up initial player object.
         This object contains the following keys:
@@ -290,8 +290,10 @@ def runGame():
     moveUp    = False
     moveDown  = False
 
-    sprite_layers, player_sprite, player_layer, renderer = initializeLevel('testlevel.tmx',1,p)
-
+    if MAP_NUMBER == 0:
+        sprite_layers, player_sprite, player_layer, renderer = initializeLevel('SandLevel.tmx',1,p)
+    elif MAP_NUMBER == 1:
+	   sprite_layers, player_sprite, player_layer, renderer = initializeLevel('testlevel.tmx',1,p)
     frame_count = 0
 
     while True: # main game loop
@@ -431,13 +433,14 @@ def runGame():
         '''
             Here, we have backwards-list checking to avoid a common object
             deletion mistake.
-        '''
+        ''' 
+		'''
         for i in range(len(obstacleObjs) - 1, -1, -1):
             # Player collision checking with the obstacles.
             if p.isTouching(obstacleObjs[i].xPos, obstacleObjs[i].yPos, obstacleObjs[i].yPos + obstacleObjs[i].height):
                 soundObj = pygame.mixer.Sound('Sounds/Spikes.wav')
                 soundObj.play()
-            ''' Collision boundary drawing (for debug) '''
+            # Collision boundary drawing (for debug)
             # pygame.draw.rect(SCREEN, GRAY_1, (obstacleObjs[i].xPos, obstacleObjs[i].yPos, obstacleObjs[i].width, obstacleObjs[i].height))
             # Checking if a particular object is a rock.
             if isinstance(obstacleObjs[i], AI.giantRock):
@@ -501,7 +504,7 @@ def runGame():
             # else:
                # SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())
 
-
+        '''
         frame_count += 1
 
         pygame.display.update()
@@ -515,40 +518,50 @@ def startScreen():
     titleRect.centerx = HALF_WINWIDTH
     topCoord += titleRect.height
 
-    # Unfortunately Pygame's font and text system only show one line at
-    # a time, so we can't use string with the \n newline characters in them.
-    # So we will use a list with each line in it,
-    instructionText = ['Arrow keys or WASD to move',
-                        'Esc to quit.']
+
 
     # Star with drawing a black color to the entire window
     SCREEN.fill(BGCOLOR)
 
     #Draw the title image to the window:
-    SCREEN.blit(IMAGESDICT['title'], titleRect)
+    SCREEN.blit(IMAGESDICT['title'], (0,0))
 
-    # Position and draw the text.
-    for i in range(len(instructionText)):
-        instSurf = BASICFONT.render(instructionText[i], 1, TEXTCOLOR)
-        instRect = instSurf.get_rect()
-        topCoord += 10 # 10 pixels will go in between each line of text.
-        instRect.top = topCoord
-        instRect.centerx = HALF_WINWIDTH
-        topCoord += instRect.height # Adjust for the height of the line.
-        SCREEN.blit(instSurf, instRect)
+    menu = MENU.Menu()#necessary
+    menu.set_colors((255,255,255), (0,0,255), (0,255,255))#optional
+    menu.set_fontsize(40)#optional
+    #menu.set_font('data/couree.fon')#optional
+    #menu.move_menu(0, 0)#optional, moves the list of choices BY (x,y)
+    menu.init(['Level 1','Level 2','Quit'], SCREEN)#necessary
+    #menu.move_menu(0, 0)#optional, moves the choice list TO (x,y)
+    menu.draw()#necessary
 
-    while True: # Main loop for the start screen.
+    pygame.key.set_repeat(199,69)#(delay,interval)
+    pygame.display.update()
+    while 1:
         for event in pygame.event.get():
-            if event.type == QUIT:
-                terminate()
-            elif event.type == KEYDOWN:
+            if event.type == KEYDOWN:
+                if event.key == K_UP:
+                    menu.draw(-1) #here is the Menu class function
+                if event.key == K_DOWN:
+                    menu.draw(1) #here is the Menu class function
+                if event.key == K_RETURN:
+                    if menu.get_position() == 0:#here is the Menu class function
+                        return 0;
+                    elif menu.get_position() == 1:#here is the Menu class function
+                        return 1;
+                    elif menu.get_position() == 2:#here is the Menu class function
+                        pygame.display.quit()
+                        sys.exit()
                 if event.key == K_ESCAPE:
-                    terminate()
-                return # user has pressed a key, so return.
+                    pygame.display.quit()
+                    sys.exit()
+                pygame.display.update()
+            elif event.type == QUIT:
+                pygame.display.quit()
+                sys.exit()
+        pygame.time.wait(8)
 
-        # Display the screen contents to the actual screen.
-        pygame.display.update()
-        FPSCLOCK.tick()
+
 
 def check_collision(player,step_x,step_y,coll_layer):
     # find the tile location of the player
@@ -587,7 +600,9 @@ def check_collision(player,step_x,step_y,coll_layer):
     if step_y != 0 and rect.move(0, step_y).collidelist(tile_rects) > -1:
         if player.isJumping():
             player.jumping = False;
+            print 'Collision detected, isJumping'
         elif step_y > 0:
+            print 'Collision detected, hit ground'
             player.change_sprite(IMAGESDICT['player'])
             player.onGround = True;
         else:
