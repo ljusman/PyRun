@@ -418,7 +418,7 @@ def runGame(MAP_NUMBER):
             else:
                 renderer.render_layer(SCREEN, sprite_layer)
 
-        ''' Collision debugging '''
+        # Collision debugging
         # pygame.draw.rect(SCREEN, (0, 0, 0), (p.x, p.y, p.width, p.height))
         # pygame.draw.rect(SCREEN, (0, 0, 0), (obstacleObjs[0].xPos, obstacleObjs[0].yPos, obstacleObjs[0].width, obstacleObjs[0].height))
         # pygame.draw.rect(SCREEN, (255, 0, 255), (obstacleObjs[1].xPos, obstacleObjs[1].yPos, obstacleObjs[1].width, obstacleObjs[1].height))
@@ -433,8 +433,8 @@ def runGame(MAP_NUMBER):
         '''
             Here, we have backwards-list checking to avoid a common object
             deletion mistake.
-        ''' 
-		'''
+        '''
+        '''
         for i in range(len(obstacleObjs) - 1, -1, -1):
             # Player collision checking with the obstacles.
             if p.isTouching(obstacleObjs[i].xPos, obstacleObjs[i].yPos, obstacleObjs[i].yPos + obstacleObjs[i].height):
@@ -569,7 +569,7 @@ def check_collision(player,step_x,step_y,coll_layer):
     tile_x_right = int((player.get_rect().right) // coll_layer.tilewidth)
     tile_y_bottom = int((player.get_rect().bottom) // coll_layer.tileheight)
     tile_y_top = int((player.get_rect().top) // coll_layer.tileheight)
-    #print tile_x, tile_y
+
     # Create local player rect to work with
     rect = player.get_rect()
     # find the tiles around the hero and extract their rects for collision
@@ -590,6 +590,10 @@ def check_collision(player,step_x,step_y,coll_layer):
     step_x  = special_round(step_x)
     if step_x != 0 and rect.move(step_x, 0).collidelist(tile_rects) > -1:
         res_step_x = 0
+    elif step_x == 0 and rect.move(0, 0).collidelist(tile_rects) > -1:
+        res_step_x = -10
+    elif step_x == 0 and rect.move(0, 0).collidelist(tile_rects) > -1:
+        res_step_x = 10
 
     # reset player rect
     rect = player.get_rect()
@@ -600,16 +604,15 @@ def check_collision(player,step_x,step_y,coll_layer):
     if step_y != 0 and rect.move(0, step_y).collidelist(tile_rects) > -1:
         if player.isJumping():
             player.jumping = False;
-            print 'Collision detected, isJumping'
         elif step_y > 0:
-            print 'Collision detected, hit ground'
             player.change_sprite(IMAGESDICT['player'])
             player.onGround = True;
         else:
             print 'Collision detected, not ground, not jumping'
         res_step_y = 0
     elif rect.move(0, 0).collidelist(tile_rects) > -1:
-        res_step_y = -25
+        # Force the player to move up if stuck in an object
+        res_step_y = -15
 
     # return the step the hero should do
     return res_step_x, res_step_y
