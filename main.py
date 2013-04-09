@@ -350,11 +350,9 @@ def runGame():
                 p.change_sprite(
                 IMAGESDICT['jump4']
                 )
-            step_y -= MOVERATE
-        else:
-            p.change_sprite(
-                IMAGESDICT['jump3']
-                )
+            if t < JUMPING_DURATION and t > 0:
+                step_y -= MOVERATE
+        elif not p.isJumping() and not p.isOnGround():
             step_y += MOVERATE
         
         # actually move the player
@@ -362,7 +360,7 @@ def runGame():
             step_x -= MOVERATE
         if moveRight:
             step_x += MOVERATE
-            if not p.jumping:
+            if not p.isJumping():
                 if frame_count is 20:
                     p.change_sprite(
                     IMAGESDICT['run1']
@@ -384,6 +382,7 @@ def runGame():
         if moveUp:
             if not p.isJumping():
                 p.jumping = True
+                p.onGround = False
                 p.change_sprite(
                 IMAGESDICT['jump2']
                 )
@@ -564,19 +563,23 @@ def check_collision(player,step_x,step_y,coll_layer):
     res_step_y = step_y
 
     step_x  = special_round(step_x)
-    if step_x != 0:
-        if player.get_rect().move(step_x, 0).collidelist(tile_rects) > -1:
-            res_step_x = 0
+    if step_x != 0 and player.get_rect().move(step_x, 0).collidelist(tile_rects) > -1:
+        res_step_x = 0
     
     # y direction, floor or ceil depending on the sign of the step
-    step_y = special_round(step_y)
+    #step_y = special_round(step_y)
 
     # detect a collision and dont move in y direction if colliding
-    if player.get_rect().move(0, step_y).collidelist(tile_rects) > -1:
-        if player.isJumping() and step_y < 0:
+    if step_y != 0 and player.get_rect().move(0, step_y).collidelist(tile_rects) > -1:
+        if player.isJumping():
             player.jumping = False;
+            print 'Collision detected, isJumping'
+        elif step_y > 0:
+            print 'Collision detected, hit ground'
+            player.change_sprite(IMAGESDICT['player'])
+            player.onGround = True;
         res_step_y = 0
-
+    print step_y, res_step_y
     # return the step the hero should do
     return res_step_x, res_step_y
 
