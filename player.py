@@ -22,10 +22,13 @@ class Player:
         self.onGround = False
         self.jumping = False
 
-        self.rect = self.get_rect()
+        # self.rect = self.get_rect()
 
     def isJumping(self):
         return self.jumping
+
+    def isOnGround(self):
+        return self.onGround
 
     # Is the player touching a particular object?
     def isTouching(self, x, y, endYRange):
@@ -49,7 +52,9 @@ class Player:
         return False
     
     def get_rect(self):
-        return pygame.Rect((self.x, self.y, self.width, self.height))
+        rect = pygame.Rect((self.x, self.y, self.width, self.height))
+        rect.midbottom = (self.x, self.y)
+        return rect
 
     def change_sprite(self,image):
         self.image = image
