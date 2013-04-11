@@ -27,6 +27,8 @@ PLAYER_HEIGHT = 105
 
 PLAYER_LAYER = 12
 COLL_LAYER = 2 # The sprite layer which contains the collision map
+DEATH_LAYER = 3
+WIN_LAYER = 4
 
 JUMPING_DURATION = 500      # milliseconds
 HORZ_MOVE_INCREMENT = 4     # pixels
@@ -405,6 +407,12 @@ def runGame(MAP_NUMBER):
                 jumpingStart = pygame.time.get_ticks()
                 step_y -= MOVERATE
 
+
+        if check_game_end(p,step_x,step_y,sprite_layers[DEATH_LAYER]):
+            print 'Collided with death layer'
+        elif check_game_end(p,step_x,step_y,sprite_layers[WIN_LAYER]):
+            print 'Collided with win layer'
+
         step_x, step_y = check_collision(p,step_x,step_y,sprite_layers[COLL_LAYER])
 
 
@@ -583,6 +591,42 @@ def startScreen():
         pygame.time.wait(8)
 
 
+def check_game_end(player, step_x, step_y, coll_layer):
+    isColliding = False
+    # find the tile location of the player
+    tile_x_left = int((player.get_rect().left) // coll_layer.tilewidth)
+    tile_x_right = int((player.get_rect().right) // coll_layer.tilewidth)
+    tile_y_bottom = int((player.get_rect().bottom) // coll_layer.tileheight)
+    tile_y_top = int((player.get_rect().top) // coll_layer.tileheight)
+
+    # Create local player rect to work with
+    rect = player.get_rect()
+    # find the tiles around the hero and extract their rects for collision
+    tile_rects = []
+    for tile_x in (tile_x_left,tile_x_right):
+        for tile_y in (tile_y_top, tile_y_bottom):
+            for diry in (-1,0, 1):
+                for dirx in (-1,0,1):
+                    if coll_layer.content2D[tile_y + diry][tile_x + dirx] is not None:
+                        tile_rects.append(coll_layer.content2D[tile_y + diry][tile_x + dirx].rect)
+                    if coll_layer.content2D[tile_y + diry][tile_x + dirx] is not None:
+                        tile_rects.append(coll_layer.content2D[tile_y+ diry][tile_x + dirx].rect)
+
+    step_x  = special_round(step_x)
+    if step_x != 0 and rect.move(step_x, 0).collidelist(tile_rects) > -1:
+        isColliding = True
+
+    # reset player rect
+    rect = player.get_rect()
+    # y direction, floor or ceil depending on the sign of the step
+    step_y = special_round(step_y)
+
+    # detect a collision and dont move in y direction if colliding
+    if step_y != 0 and rect.move(0, step_y).collidelist(tile_rects) > -1:
+        isColliding = True
+
+    # return the step the hero should do
+    return isColliding
 
 def check_collision(player,step_x,step_y,coll_layer):
     # find the tile location of the player
