@@ -459,7 +459,7 @@ def runGame(MAP_NUMBER):
         '''
         
         for i in range(len(obstacleObjs) - 1, -1, -1):
-            SCREEN.blit(p.image, p.get_rect())
+            # SCREEN.blit(p.image, p.get_rect())
             pygame.draw.rect(SCREEN, (0, 0, 0), (p.x, p.y, p.width, p.height))
             # pygame.draw.rect(SCREEN, GRAY_1, (obstacleObjs[i].xPos, obstacleObjs[i].yPos, obstacleObjs[i].width, obstacleObjs[i].height))
             # pygame.draw.rect(SCREEN, (0, 0, 0), (obstacleObjs[0].xPos, obstacleObjs[0].yPos, obstacleObjs[0].width, obstacleObjs[0].height))
