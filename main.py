@@ -25,12 +25,13 @@ TILE_SIZE = 25
 PLAYER_WIDTH = 40
 PLAYER_HEIGHT = 105
 
+PLAYER_LAYER = 12
 COLL_LAYER = 2 # The sprite layer which contains the collision map
 
 JUMPING_DURATION = 500      # milliseconds
 HORZ_MOVE_INCREMENT = 4     # pixels
 TIME_AT_PEAK = JUMPING_DURATION / 2
-JUMP_HEIGHT = 100           # pixels
+JUMP_HEIGHT = 10           # pixels
 
 # Here is the place to define constants for AI implementation...
 ROCK_BALL_POSITION = ((WINWIDTH - 400), (HALF_WINHEIGHT - 200))
@@ -139,6 +140,7 @@ def main():
     global FPSCLOCK, SCREEN, IMAGESDICT, BASICFONT, PLAYERIMAGES, currentImage
     # Pygame initialization and basic set up of the global variables
     pygame.init()
+    pygame.mixer.init()
     FPSCLOCK = pygame.time.Clock() # Creates an object to keep track of time.
 
     SCREEN = pygame.display.set_mode((WINWIDTH, WINHEIGHT))
@@ -294,18 +296,24 @@ def runGame(MAP_NUMBER):
     moveUp    = False
     moveDown  = False
 
+    pygame.mixer.init()
     if MAP_NUMBER == 0:
-        sprite_layers, player_sprite, player_layer, renderer = initializeLevel('SandLevel.tmx',1,p)
+        sprite_layers, player_sprite, player_layer, renderer = initializeLevel('SandLevel.tmx',PLAYER_LAYER,p)
+        pygame.mixer.music.load('Sounds/NeroNewLifeCut.mp3')
     elif MAP_NUMBER == 1:
-	   sprite_layers, player_sprite, player_layer, renderer = initializeLevel('testlevel.tmx',1,p)
+        sprite_layers, player_sprite, player_layer, renderer = initializeLevel('ForestLevel.tmx',PLAYER_LAYER,p)
+        pygame.mixer.music.load('Sounds/Level2.mp3')
+
+
+    pygame.mixer.music.play(0)        
     frame_count = 0
 
     while True: # main game loop
 
         # update player sprite
-        sprite_layers[1].remove_sprite(player_sprite)
+        sprite_layers[PLAYER_LAYER].remove_sprite(player_sprite)
         player_sprite = p.get_sprite()
-        sprite_layers[1].add_sprite(player_sprite)
+        sprite_layers[PLAYER_LAYER].add_sprite(player_sprite)
 
         # reset applicable variables
         step_x = 0
@@ -511,7 +519,7 @@ def runGame(MAP_NUMBER):
 
         '''
 
-        cam_x += 1
+        cam_x += 2
         frame_count += 1
 
         pygame.display.update()
@@ -524,6 +532,10 @@ def startScreen():
     titleRect.top = topCoord
     titleRect.centerx = HALF_WINWIDTH
     topCoord += titleRect.height
+    
+    pygame.mixer.init()
+
+    pygame.mixer.music.load('Sounds/Menu.mp3')
 
 
 
@@ -544,6 +556,8 @@ def startScreen():
 
     pygame.key.set_repeat(199,69)#(delay,interval)
     pygame.display.update()
+    pygame.mixer.music.play(0)
+    #sound.play()
     while 1:
         for event in pygame.event.get():
             if event.type == KEYDOWN:
