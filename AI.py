@@ -322,6 +322,10 @@ class giantRock(movingObstacle):
         elif self.giantRockMoveMode == 'left':
             self.move(-self.speed, 0)
 
+class tidalWave(movingObstacle):
+    
+    def __init__(self,pos,size,image):
+        return movingObstacle.__init__(self, pos, size, image)
 '''
     It is convenient to define an animal sub-class for the class of
     moving obstacles, since animals are usually animated.
