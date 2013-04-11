@@ -9,6 +9,7 @@ HALF_WINWIDTH = int(WINWIDTH / 2)
 HALF_WINHEIGHT = int(WINHEIGHT / 2)
 
 CAM_MOVE_SPEED = 5 # how many pixels per frame the camera moves
+CAM_X_INCREMENT = 3
 
 BRIGHTBLUE  = (  0, 170, 255)
 WHITE       = (255, 255, 255)
@@ -36,12 +37,12 @@ TIME_AT_PEAK = JUMPING_DURATION / 2
 JUMP_HEIGHT = 10           # pixels
 
 # Here is the place to define constants for AI implementation...
-ROCK_BALL_POSITION = ((WINWIDTH - 400), (HALF_WINHEIGHT - 200))
+ROCK_BALL_POSITION = ((-50), (HALF_WINHEIGHT - 100))
 ROCK_BALL_SIZE = (256, 256)
 ROCK_GRAVITY = 0.4
 ROCK_FLOOR_ADJUSTMENT_FACTOR = 2.6
 ROCK_ROTATE_INCREMENT = 4
-ROCK_SPEED = 8
+ROCK_SPEED = 0
 aiMoveStarted = False
 
 TIDAL_WAVE_POSITION = ((-30), (HALF_WINHEIGHT - 100))
@@ -55,7 +56,7 @@ TIDAL_WAVE_SIZE = (500, 600)
                    BANANA_PEEL_VERT_RISE_SPEED = -20
                    BANANA_ROTATE_FIRST = -10
 '''
-BANANA_PEEL_POSITION = ((WINWIDTH - 500), (HALF_WINHEIGHT))
+BANANA_PEEL_POSITION = ((WINWIDTH + 10), (HALF_WINHEIGHT + 180))
 BANANA_PEEL_SIZE = (50, 50)
 BANANA_PEEL_INIT_SLIP_TIME = 10
 BANANA_PEEL_HORI_RISE_SPEED = -20
@@ -71,7 +72,7 @@ SPIKES_SIZE = (128, 50)
 LOG_POSITION = ((WINWIDTH - 300), (HALF_WINHEIGHT))
 LOG_SIZE = (256, 40)
 
-SNAKE_POSITION = ((WINWIDTH - 400), (HALF_WINHEIGHT))
+SNAKE_POSITION = ((WINWIDTH + 10), (HALF_WINHEIGHT + 170))
 SNAKE_SIZE = (100, 64)
 SNAKE_SIZE_2 = (128, 64)
 SNAKE_SPEED = 4
@@ -82,7 +83,7 @@ BIRD_SIZE = (150, 110)
 BIRD_SPEED = 12
 BIRD_FRAME_RATE = 2
 
-SPIDER_POSITION = ((WINWIDTH - 200), (HALF_WINHEIGHT - 100))
+SPIDER_POSITION = ((WINWIDTH + 10), (HALF_WINHEIGHT - 10))
 SPIDER_SIZE = (64, 64)
 SPIDER_SPEED = 5
 SPIDER_FRAME_RATE = 5
@@ -423,7 +424,7 @@ def runGame(MAP_NUMBER):
             print 'Collided with death layer'
         elif check_game_end(p,step_x,step_y,sprite_layers[WIN_LAYER]):
             print 'Collided with win layer'
-        elif p.get_rect().left <= (cam_x-HALF_WINWIDTH*2):
+        elif p.get_rect().left <= (cam_x-HALF_WINWIDTH):
             print 'Collided with left end of screen'
         step_x, step_y = check_collision(p,step_x,step_y,sprite_layers[COLL_LAYER])
 
@@ -480,22 +481,24 @@ def runGame(MAP_NUMBER):
         
         for i in range(len(obstacleObjs) - 1, -1, -1):
             # Player collision checking with the obstacles.
-            if p.isTouching(obstacleObjs[i].xPos, obstacleObjs[i].yPos, obstacleObjs[i].yPos + obstacleObjs[i].height):
-                soundObj = pygame.mixer.Sound('Sounds/Spikes.wav')
-                soundObj.play()
+            pygame.draw.rect(SCREEN, (0, 0, 0), (p.x, p.y, p.width, p.height))
+            # if p.isTouching(obstacleObjs[i].xPos, obstacleObjs[i].yPos, obstacleObjs[i].yPos + obstacleObjs[i].height):
+                # soundObj = pygame.mixer.Sound('Sounds/Spikes.wav')
+                # soundObj.play()
             # Collision boundary drawing (for debug)
             # pygame.draw.rect(SCREEN, GRAY_1, (obstacleObjs[i].xPos, obstacleObjs[i].yPos, obstacleObjs[i].width, obstacleObjs[i].height))
             # Checking if a particular object is a rock.
             if isinstance(obstacleObjs[i], AI.giantRock):
                 obstacleObjs[i].setSpeed(ROCK_SPEED)
-                obstacleObjs[i].doGiantRockAction(p, floorY(), ROCK_GRAVITY, WINWIDTH)
+                obstacleObjs[i].doGiantRockAction(p, floorY() - 40, ROCK_GRAVITY, WINWIDTH)
                 # CHOPPED_ROCK = pygame.transform.rotozoom(obstacleObjs[i].image, obstacleObjs[i].giantRockRotate(ROCK_ROTATE_INCREMENT), 2.0)
                 # CHOPPED_ROCK = pygame.transform.scale(CHOPPED_ROCK, obstacleObjs[i].image.get_size())
                 SCREEN.blit(rockAnimation[obstacleObjs[i].animateToNext(2, 8)], obstacleObjs[i].get_rect())
             # Checking if a particular object is a banana peel.
             elif isinstance(obstacleObjs[i], AI.bananaPeel):
                 obstacleObjs[i].setHoriAndVertRiseSpeeds(BANANA_PEEL_HORI_RISE_SPEED, BANANA_PEEL_VERT_RISE_SPEED)
-                obstacleObjs[i].doBananaPeelAction(p, floorY(), ROCK_GRAVITY, BANANA_PEEL_TIME_TO_RISE, WINWIDTH)
+                obstacleObjs[i].doBananaPeelAction(p, floorY() + 180, ROCK_GRAVITY, BANANA_PEEL_TIME_TO_RISE, WINWIDTH)
+                obstacleObjs[i].move(-CAM_X_INCREMENT, 0)
                 BANANA_IMG_ROT = pygame.transform.rotate(obstacleObjs[i].image, obstacleObjs[i].slipRotate(floorY(), BANANA_ROTATE_FIRST, BANANA_ROTATE_SECOND))
                 blit_alpha(SCREEN, BANANA_IMG_ROT, obstacleObjs[i].get_rect(), obstacleObjs[i].doFadeOutBananaPeel(BANANA_PEEL_FADE_DECREMENT))
                 # Has the banana peel faded to 0 after being slipped on?
@@ -531,11 +534,13 @@ def runGame(MAP_NUMBER):
             # Checking if the object is a spider
             elif isinstance(obstacleObjs[i], AI.spider):
                 obstacleObjs[i].setFrameRate(SPIDER_FRAME_RATE)
+                obstacleObjs[i].move(-CAM_X_INCREMENT, 0)
                 if (obstacleObjs[i].doSpiderAction(SPIDER_SPEED)):
                     SCREEN.blit(spiderAnimation[0], obstacleObjs[i].get_rect())
                 else:
                     SCREEN.blit(spiderAnimation[1], obstacleObjs[i].get_rect())
-                pygame.draw.rect(SCREEN, GRAY_1, obstacleObjs[i].getWebStringRect())
+                obstacleObjs[i].setWebStringRect(obstacleObjs[i].xPos + obstacleObjs[i].width/2, obstacleObjs[i].yPos - 50, 2, 50) 
+                pygame.draw.rect(SCREEN, GRAY_1, obstacleObjs[i].getWebStringRect())                
             # Checking if the object represents the mud
             elif isinstance(obstacleObjs[i], AI.mud):
                 obstacleObjs[i].setFrameRate(MUD_FRAME_RATE)
