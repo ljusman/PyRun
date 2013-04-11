@@ -9,6 +9,7 @@ HALF_WINWIDTH = int(WINWIDTH / 2)
 HALF_WINHEIGHT = int(WINHEIGHT / 2)
 
 CAM_MOVE_SPEED = 5 # how many pixels per frame the camera moves
+CAM_X_INCREMENT = 3
 
 BRIGHTBLUE  = (  0, 170, 255)
 WHITE       = (255, 255, 255)
@@ -33,12 +34,12 @@ TIME_AT_PEAK = JUMPING_DURATION / 2
 JUMP_HEIGHT = 100           # pixels
 
 # Here is the place to define constants for AI implementation...
-ROCK_BALL_POSITION = ((WINWIDTH - 400), (HALF_WINHEIGHT - 200))
+ROCK_BALL_POSITION = ((-50), (HALF_WINHEIGHT - 100))
 ROCK_BALL_SIZE = (256, 256)
 ROCK_GRAVITY = 0.4
 ROCK_FLOOR_ADJUSTMENT_FACTOR = 2.6
 ROCK_ROTATE_INCREMENT = 4
-ROCK_SPEED = 8
+ROCK_SPEED = 0
 aiMoveStarted = False
 
 '''
@@ -49,7 +50,7 @@ aiMoveStarted = False
                    BANANA_PEEL_VERT_RISE_SPEED = -20
                    BANANA_ROTATE_FIRST = -10
 '''
-BANANA_PEEL_POSITION = ((WINWIDTH - 500), (HALF_WINHEIGHT))
+BANANA_PEEL_POSITION = ((WINWIDTH + 10), (HALF_WINHEIGHT + 180))
 BANANA_PEEL_SIZE = (50, 50)
 BANANA_PEEL_INIT_SLIP_TIME = 10
 BANANA_PEEL_HORI_RISE_SPEED = -20
@@ -65,7 +66,7 @@ SPIKES_SIZE = (128, 50)
 LOG_POSITION = ((WINWIDTH - 300), (HALF_WINHEIGHT))
 LOG_SIZE = (256, 40)
 
-SNAKE_POSITION = ((WINWIDTH - 400), (HALF_WINHEIGHT))
+SNAKE_POSITION = ((WINWIDTH + 10), (HALF_WINHEIGHT + 165))
 SNAKE_SIZE = (100, 64)
 SNAKE_SIZE_2 = (128, 64)
 SNAKE_SPEED = 4
@@ -76,7 +77,7 @@ BIRD_SIZE = (150, 110)
 BIRD_SPEED = 12
 BIRD_FRAME_RATE = 2
 
-SPIDER_POSITION = ((WINWIDTH - 200), (HALF_WINHEIGHT - 100))
+SPIDER_POSITION = ((WINWIDTH + 10), (HALF_WINHEIGHT - 10))
 SPIDER_SIZE = (64, 64)
 SPIDER_SPEED = 5
 SPIDER_FRAME_RATE = 5
@@ -265,17 +266,12 @@ def runGame(MAP_NUMBER):
     rockAnimation = [ROCK_IMG_SCALE, ROCK_IMG_SCALE_2, ROCK_IMG_SCALE_3, ROCK_IMG_SCALE_4]
     mudAnimation = [MUD_IMG_SCALE, MUD_IMG_SCALE_2]
 
-    giantRock = AI.giantRock(
-        ROCK_BALL_POSITION,
-        ROCK_BALL_SIZE,
-        ROCK_IMG_SCALE,
-        LEFT
-        )
 
     # For storing our obstacles
     obstacleObjs = []
 
     obstacleObjs.append(makeObstacle('Giant rock', ROCK_BALL_POSITION, ROCK_BALL_SIZE, ROCK_IMG_SCALE))
+    '''
     obstacleObjs.append(makeObstacle('Spikes', SPIKES_POSITION, SPIKES_SIZE, SPIKES_IMG_SCALE))
     obstacleObjs.append(makeObstacle('Snake', SNAKE_POSITION, SNAKE_SIZE, SNAKE_IMG_SCALE))
     obstacleObjs.append(makeObstacle('Bird', BIRD_POSITION, BIRD_SIZE, BIRD_IMG_SCALE))
@@ -283,7 +279,7 @@ def runGame(MAP_NUMBER):
     obstacleObjs.append(makeObstacle('Log', LOG_POSITION, LOG_SIZE, LOG_IMG_SCALE))
     obstacleObjs.append(makeObstacle('Banana peel', BANANA_PEEL_POSITION, BANANA_PEEL_SIZE, BANANA_IMG_SCALE))
     obstacleObjs.append(makeObstacle('Mud', MUD_POSITION, MUD_SIZE, MUD_IMG_SCALE))
-
+    '''
     ballImage = pygame.transform.scale(IMAGESDICT['rock'], ROCK_BALL_SIZE)
 
     slipTimeElapsed = BANANA_PEEL_INIT_SLIP_TIME
@@ -297,9 +293,10 @@ def runGame(MAP_NUMBER):
     if MAP_NUMBER == 0:
         sprite_layers, player_sprite, player_layer, renderer = initializeLevel('SandLevel.tmx',1,p)
     elif MAP_NUMBER == 1:
-	   sprite_layers, player_sprite, player_layer, renderer = initializeLevel('testlevel.tmx',1,p)
+        sprite_layers, player_sprite, player_layer, renderer = initializeLevel('testlevel.tmx',1,p)
     frame_count = 0
-
+    
+        
     while True: # main game loop
 
         # update player sprite
@@ -307,10 +304,10 @@ def runGame(MAP_NUMBER):
         player_sprite = p.get_sprite()
         sprite_layers[1].add_sprite(player_sprite)
 
-        # reset applicable variables
+        # reset applicable variables        
         step_x = 0
         step_y = 0
-
+        
         # This loop will handle all of the player input events
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -365,7 +362,7 @@ def runGame(MAP_NUMBER):
 
         # actually move the player
         if moveLeft:
-            step_x -= MOVERATE
+            step_x -= MOVERATE            
         if moveRight:
             step_x += MOVERATE
             if not p.isJumping():
@@ -395,11 +392,10 @@ def runGame(MAP_NUMBER):
                 IMAGESDICT['jump2']
                 )
                 jumpingStart = pygame.time.get_ticks()
-                step_y -= MOVERATE
+                step_y -= MOVERATE                
 
         step_x, step_y = check_collision(p,step_x,step_y,sprite_layers[COLL_LAYER])
-
-
+    
 
         # Apply the steps to the player and the player rect
         p.x += step_x
@@ -407,7 +403,7 @@ def runGame(MAP_NUMBER):
 
         player_sprite.rect.midbottom = (p.x, p.y)
 
-        # Set the new camera position
+         # Set the new camera position
         renderer.set_camera_position_and_size(cam_x, cam_y, WINWIDTH, WINHEIGHT)
 
         # Draw the background
@@ -415,6 +411,7 @@ def runGame(MAP_NUMBER):
 
 
         # render the map including the player
+        
         for sprite_layer in sprite_layers:
             if sprite_layer.is_object_group:
                 # we dont draw the object group layers
@@ -422,12 +419,27 @@ def runGame(MAP_NUMBER):
                 continue
             else:
                 renderer.render_layer(SCREEN, sprite_layer)
-
+        
         # Collision debugging
         # pygame.draw.rect(SCREEN, (0, 0, 0), (p.x, p.y, p.width, p.height))
         # pygame.draw.rect(SCREEN, (0, 0, 0), (obstacleObjs[0].xPos, obstacleObjs[0].yPos, obstacleObjs[0].width, obstacleObjs[0].height))
         # pygame.draw.rect(SCREEN, (255, 0, 255), (obstacleObjs[1].xPos, obstacleObjs[1].yPos, obstacleObjs[1].width, obstacleObjs[1].height))
 
+
+        obstacleChoice = random.randint(1, 4)
+
+        if (cam_x % 100 == 0):
+            if (obstacleChoice == 1):
+                obstacleObjs.append(makeObstacle('Bird', BIRD_POSITION, BIRD_SIZE, BIRD_IMG_SCALE))
+            elif (obstacleChoice == 2):
+                obstacleObjs.append(makeObstacle('Snake', SNAKE_POSITION, SNAKE_SIZE, SNAKE_IMG_SCALE))
+            elif (obstacleChoice == 3):
+                obstacleObjs.append(makeObstacle('Banana peel', BANANA_PEEL_POSITION, BANANA_PEEL_SIZE, BANANA_IMG_SCALE))
+            else:
+                obstacleObjs.append(makeObstacle('Spider', SPIDER_POSITION, SPIDER_SIZE, SPIDER_IMG_SCALE))
+                
+
+         
 
         '''
             We need specific drawing cases for different obstacles,
@@ -439,25 +451,28 @@ def runGame(MAP_NUMBER):
             Here, we have backwards-list checking to avoid a common object
             deletion mistake.
         '''
-        '''
+        
         for i in range(len(obstacleObjs) - 1, -1, -1):
-            # Player collision checking with the obstacles.
-            if p.isTouching(obstacleObjs[i].xPos, obstacleObjs[i].yPos, obstacleObjs[i].yPos + obstacleObjs[i].height):
-                soundObj = pygame.mixer.Sound('Sounds/Spikes.wav')
-                soundObj.play()
-            # Collision boundary drawing (for debug)
+            # SCREEN.blit(p.image, p.get_rect())
+            pygame.draw.rect(SCREEN, (0, 0, 0), (p.x, p.y, p.width, p.height))
             # pygame.draw.rect(SCREEN, GRAY_1, (obstacleObjs[i].xPos, obstacleObjs[i].yPos, obstacleObjs[i].width, obstacleObjs[i].height))
+            # pygame.draw.rect(SCREEN, (0, 0, 0), (obstacleObjs[0].xPos, obstacleObjs[0].yPos, obstacleObjs[0].width, obstacleObjs[0].height))
+            # Player collision checking with the obstacles.
+            if (p.isTouching(obstacleObjs[i].xPos, obstacleObjs[i].yPos, obstacleObjs[i].yPos + obstacleObjs[i].height) or obstacleObjs[i].isTouching(p.x, p.y, p.y + p.height)):
+                print("Hit.")
+            # Collision boundary drawing (for debug)            
             # Checking if a particular object is a rock.
             if isinstance(obstacleObjs[i], AI.giantRock):
                 obstacleObjs[i].setSpeed(ROCK_SPEED)
-                obstacleObjs[i].doGiantRockAction(p, floorY(), ROCK_GRAVITY, WINWIDTH)
+                obstacleObjs[i].doGiantRockAction(p, floorY() - 50, ROCK_GRAVITY, WINWIDTH)
                 # CHOPPED_ROCK = pygame.transform.rotozoom(obstacleObjs[i].image, obstacleObjs[i].giantRockRotate(ROCK_ROTATE_INCREMENT), 2.0)
                 # CHOPPED_ROCK = pygame.transform.scale(CHOPPED_ROCK, obstacleObjs[i].image.get_size())
                 SCREEN.blit(rockAnimation[obstacleObjs[i].animateToNext(2, 8)], obstacleObjs[i].get_rect())
             # Checking if a particular object is a banana peel.
             elif isinstance(obstacleObjs[i], AI.bananaPeel):
                 obstacleObjs[i].setHoriAndVertRiseSpeeds(BANANA_PEEL_HORI_RISE_SPEED, BANANA_PEEL_VERT_RISE_SPEED)
-                obstacleObjs[i].doBananaPeelAction(p, floorY(), ROCK_GRAVITY, BANANA_PEEL_TIME_TO_RISE, WINWIDTH)
+                obstacleObjs[i].doBananaPeelAction(p, floorY() + 180, ROCK_GRAVITY, BANANA_PEEL_TIME_TO_RISE, WINWIDTH)
+                obstacleObjs[i].move(-CAM_X_INCREMENT, 0)
                 BANANA_IMG_ROT = pygame.transform.rotate(obstacleObjs[i].image, obstacleObjs[i].slipRotate(floorY(), BANANA_ROTATE_FIRST, BANANA_ROTATE_SECOND))
                 blit_alpha(SCREEN, BANANA_IMG_ROT, obstacleObjs[i].get_rect(), obstacleObjs[i].doFadeOutBananaPeel(BANANA_PEEL_FADE_DECREMENT))
                 # Has the banana peel faded to 0 after being slipped on?
@@ -493,10 +508,12 @@ def runGame(MAP_NUMBER):
             # Checking if the object is a spider
             elif isinstance(obstacleObjs[i], AI.spider):
                 obstacleObjs[i].setFrameRate(SPIDER_FRAME_RATE)
+                obstacleObjs[i].move(-CAM_X_INCREMENT, 0)
                 if (obstacleObjs[i].doSpiderAction(SPIDER_SPEED)):
                     SCREEN.blit(spiderAnimation[0], obstacleObjs[i].get_rect())
                 else:
                     SCREEN.blit(spiderAnimation[1], obstacleObjs[i].get_rect())
+                obstacleObjs[i].setWebStringRect(obstacleObjs[i].xPos + obstacleObjs[i].width/2, obstacleObjs[i].yPos - 50, 2, 50) 
                 pygame.draw.rect(SCREEN, GRAY_1, obstacleObjs[i].getWebStringRect())
             # Checking if the object represents the mud
             elif isinstance(obstacleObjs[i], AI.mud):
@@ -508,10 +525,8 @@ def runGame(MAP_NUMBER):
             # Default for drawing any other obstacles
             # else:
                # SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())
-
-        '''
-
-        cam_x += 1
+        
+        cam_x += CAM_X_INCREMENT
         frame_count += 1
 
         pygame.display.update()
@@ -578,7 +593,7 @@ def check_collision(player,step_x,step_y,coll_layer):
     tile_y_top = int((player.get_rect().top) // coll_layer.tileheight)
 
     # Create local player rect to work with
-    rect = player.get_rect()
+    rect = player.get_rect() 
     # find the tiles around the hero and extract their rects for collision
     tile_rects = []
     for tile_x in (tile_x_left,tile_x_right):

@@ -47,7 +47,7 @@ class Player:
                 Here, we check for whether or not the object's bottom is at
                 the same level as (or below) the player's top y coordinate.
             '''    
-            if (int(endYRange) >= int(self.y)):
+            if (int(endYRange) >= int(self.y)):                
                 return True        
         return False
     
