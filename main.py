@@ -34,12 +34,12 @@ TIME_AT_PEAK = JUMPING_DURATION / 2
 JUMP_HEIGHT = 100           # pixels
 
 # Here is the place to define constants for AI implementation...
-ROCK_BALL_POSITION = ((WINWIDTH - 400), (HALF_WINHEIGHT - 200))
+ROCK_BALL_POSITION = ((-50), (HALF_WINHEIGHT - 100))
 ROCK_BALL_SIZE = (256, 256)
 ROCK_GRAVITY = 0.4
 ROCK_FLOOR_ADJUSTMENT_FACTOR = 2.6
 ROCK_ROTATE_INCREMENT = 4
-ROCK_SPEED = 8
+ROCK_SPEED = 0
 aiMoveStarted = False
 
 '''
@@ -66,7 +66,7 @@ SPIKES_SIZE = (128, 50)
 LOG_POSITION = ((WINWIDTH - 300), (HALF_WINHEIGHT))
 LOG_SIZE = (256, 40)
 
-SNAKE_POSITION = ((WINWIDTH + 10), (HALF_WINHEIGHT + 180))
+SNAKE_POSITION = ((WINWIDTH + 10), (HALF_WINHEIGHT + 165))
 SNAKE_SIZE = (100, 64)
 SNAKE_SIZE_2 = (128, 64)
 SNAKE_SPEED = 4
@@ -266,17 +266,11 @@ def runGame(MAP_NUMBER):
     rockAnimation = [ROCK_IMG_SCALE, ROCK_IMG_SCALE_2, ROCK_IMG_SCALE_3, ROCK_IMG_SCALE_4]
     mudAnimation = [MUD_IMG_SCALE, MUD_IMG_SCALE_2]
 
-    giantRock = AI.giantRock(
-        ROCK_BALL_POSITION,
-        ROCK_BALL_SIZE,
-        ROCK_IMG_SCALE,
-        LEFT
-        )
 
     # For storing our obstacles
     obstacleObjs = []
 
-    # obstacleObjs.append(makeObstacle('Giant rock', ROCK_BALL_POSITION, ROCK_BALL_SIZE, ROCK_IMG_SCALE))
+    obstacleObjs.append(makeObstacle('Giant rock', ROCK_BALL_POSITION, ROCK_BALL_SIZE, ROCK_IMG_SCALE))
     '''
     obstacleObjs.append(makeObstacle('Spikes', SPIKES_POSITION, SPIKES_SIZE, SPIKES_IMG_SCALE))
     obstacleObjs.append(makeObstacle('Snake', SNAKE_POSITION, SNAKE_SIZE, SNAKE_IMG_SCALE))
@@ -470,7 +464,7 @@ def runGame(MAP_NUMBER):
             # Checking if a particular object is a rock.
             if isinstance(obstacleObjs[i], AI.giantRock):
                 obstacleObjs[i].setSpeed(ROCK_SPEED)
-                obstacleObjs[i].doGiantRockAction(p, floorY(), ROCK_GRAVITY, WINWIDTH)
+                obstacleObjs[i].doGiantRockAction(p, floorY() - 50, ROCK_GRAVITY, WINWIDTH)
                 # CHOPPED_ROCK = pygame.transform.rotozoom(obstacleObjs[i].image, obstacleObjs[i].giantRockRotate(ROCK_ROTATE_INCREMENT), 2.0)
                 # CHOPPED_ROCK = pygame.transform.scale(CHOPPED_ROCK, obstacleObjs[i].image.get_size())
                 SCREEN.blit(rockAnimation[obstacleObjs[i].animateToNext(2, 8)], obstacleObjs[i].get_rect())
