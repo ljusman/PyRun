@@ -26,12 +26,15 @@ TILE_SIZE = 25
 PLAYER_WIDTH = 40
 PLAYER_HEIGHT = 105
 
+PLAYER_LAYER = 12
 COLL_LAYER = 2 # The sprite layer which contains the collision map
+DEATH_LAYER = 3
+WIN_LAYER = 4
 
 JUMPING_DURATION = 500      # milliseconds
 HORZ_MOVE_INCREMENT = 4     # pixels
 TIME_AT_PEAK = JUMPING_DURATION / 2
-JUMP_HEIGHT = 100           # pixels
+JUMP_HEIGHT = 10           # pixels
 
 # Here is the place to define constants for AI implementation...
 ROCK_BALL_POSITION = ((-50), (HALF_WINHEIGHT - 100))
@@ -41,6 +44,9 @@ ROCK_FLOOR_ADJUSTMENT_FACTOR = 2.6
 ROCK_ROTATE_INCREMENT = 4
 ROCK_SPEED = 0
 aiMoveStarted = False
+
+TIDAL_WAVE_POSITION = ((-30), (HALF_WINHEIGHT - 100))
+TIDAL_WAVE_SIZE = (500, 600)
 
 '''
     Forward slip: BANANA_PEEL_HORI_RISE_SPEED = 20
@@ -132,6 +138,8 @@ def makeObstacle(obstacleChoice, position, size, image, direction = 'left'):
         return AI.spider(position, size, image)
     elif (obstacleChoice == 'Mud'):
         return AI.mud(position, size, image)
+    elif (obstacleChoice == 'Tidal wave'):
+        return AI.tidalWave(position, size, image)
     else:
         return AI.Obstacle((0,0), (0,0), pygame.Surface((0, 0)))
 
@@ -140,6 +148,7 @@ def main():
     global FPSCLOCK, SCREEN, IMAGESDICT, BASICFONT, PLAYERIMAGES, currentImage
     # Pygame initialization and basic set up of the global variables
     pygame.init()
+    pygame.mixer.init()
     FPSCLOCK = pygame.time.Clock() # Creates an object to keep track of time.
 
     SCREEN = pygame.display.set_mode((WINWIDTH, WINHEIGHT))
@@ -174,7 +183,8 @@ def main():
         'spider2': pygame.image.load('img/SpiderImages/01.png'),
         'log': pygame.image.load('img/log.png'),
         'mud': pygame.image.load('img/MudSplashingImages/mud.png'),
-        'mud2': pygame.image.load('img/MudSplashingImages/mud_sp.png')
+        'mud2': pygame.image.load('img/MudSplashingImages/mud_sp.png'),
+        'tidalWave': pygame.image.load('img/TidalWave.png')
         }
 
     # PLAYERIMAGES is a list of all possible characters the player can be.
@@ -258,6 +268,7 @@ def runGame(MAP_NUMBER):
     LOG_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['log'], LOG_SIZE)
     MUD_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['mud'], MUD_SIZE)
     MUD_IMG_SCALE_2 = pygame.transform.smoothscale(IMAGESDICT['mud2'], MUD_SIZE_2)
+    TIDAL_WAVE_IMG_SCALE = pygame.transform.smoothscale(IMAGESDICT['tidalWave'], TIDAL_WAVE_SIZE)
 
     # Animations for various AI
     snakeAnimation = [SNAKE_IMG_SCALE, SNAKE_IMG_SCALE_2]
@@ -270,7 +281,8 @@ def runGame(MAP_NUMBER):
     # For storing our obstacles
     obstacleObjs = []
 
-    obstacleObjs.append(makeObstacle('Giant rock', ROCK_BALL_POSITION, ROCK_BALL_SIZE, ROCK_IMG_SCALE))
+    # obstacleObjs.append(makeObstacle('Giant rock', ROCK_BALL_POSITION, ROCK_BALL_SIZE, ROCK_IMG_SCALE))
+    # obstacleObjs.append(makeObstacle('Tidal wave', TIDAL_WAVE_POSITION, TIDAL_WAVE_SIZE, TIDAL_WAVE_IMG_SCALE))
     '''
     obstacleObjs.append(makeObstacle('Spikes', SPIKES_POSITION, SPIKES_SIZE, SPIKES_IMG_SCALE))
     obstacleObjs.append(makeObstacle('Snake', SNAKE_POSITION, SNAKE_SIZE, SNAKE_IMG_SCALE))
@@ -290,19 +302,27 @@ def runGame(MAP_NUMBER):
     moveUp    = False
     moveDown  = False
 
+    pygame.mixer.init()
     if MAP_NUMBER == 0:
-        sprite_layers, player_sprite, player_layer, renderer = initializeLevel('SandLevel.tmx',1,p)
-    elif MAP_NUMBER == 1:
-        sprite_layers, player_sprite, player_layer, renderer = initializeLevel('testlevel.tmx',1,p)
+        sprite_layers, player_sprite, player_layer, renderer = initializeLevel('ForestLevel.tmx',PLAYER_LAYER,p)        
+        pygame.mixer.music.load('Sounds/Level2.mp3')
+        obstacleObjs.append(makeObstacle('Giant rock', ROCK_BALL_POSITION, ROCK_BALL_SIZE, ROCK_IMG_SCALE))
+    elif MAP_NUMBER == 1:        
+        sprite_layers, player_sprite, player_layer, renderer = initializeLevel('SandLevel.tmx',PLAYER_LAYER,p)
+        pygame.mixer.music.load('Sounds/NeroNewLifeCut.mp3')
+        obstacleObjs.append(makeObstacle('Tidal wave', TIDAL_WAVE_POSITION, TIDAL_WAVE_SIZE, TIDAL_WAVE_IMG_SCALE))
+
+
+    pygame.mixer.music.play(0)        
     frame_count = 0
     
         
     while True: # main game loop
 
         # update player sprite
-        sprite_layers[1].remove_sprite(player_sprite)
+        sprite_layers[PLAYER_LAYER].remove_sprite(player_sprite)
         player_sprite = p.get_sprite()
-        sprite_layers[1].add_sprite(player_sprite)
+        sprite_layers[PLAYER_LAYER].add_sprite(player_sprite)
 
         # reset applicable variables        
         step_x = 0
@@ -394,6 +414,13 @@ def runGame(MAP_NUMBER):
                 jumpingStart = pygame.time.get_ticks()
                 step_y -= MOVERATE                
 
+
+        if check_game_end(p,step_x,step_y,sprite_layers[DEATH_LAYER]):
+            print 'Collided with death layer'
+        elif check_game_end(p,step_x,step_y,sprite_layers[WIN_LAYER]):
+            print 'Collided with win layer'
+        elif p.get_rect().left <= (cam_x-HALF_WINWIDTH):
+            print 'Collided with left end of screen'
         step_x, step_y = check_collision(p,step_x,step_y,sprite_layers[COLL_LAYER])
     
 
@@ -408,7 +435,6 @@ def runGame(MAP_NUMBER):
 
         # Draw the background
         SCREEN.fill((0, 0, 0))
-
 
         # render the map including the player
         
@@ -437,9 +463,7 @@ def runGame(MAP_NUMBER):
                 obstacleObjs.append(makeObstacle('Banana peel', BANANA_PEEL_POSITION, BANANA_PEEL_SIZE, BANANA_IMG_SCALE))
             else:
                 obstacleObjs.append(makeObstacle('Spider', SPIDER_POSITION, SPIDER_SIZE, SPIDER_IMG_SCALE))
-                
-
-         
+                        
 
         '''
             We need specific drawing cases for different obstacles,
@@ -523,8 +547,8 @@ def runGame(MAP_NUMBER):
                 else:
                     SCREEN.blit(mudAnimation[1], obstacleObjs[i].get_rect())
             # Default for drawing any other obstacles
-            # else:
-               # SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())
+            elif isinstance(obstacleObjs[i], AI.tidalWave):
+                SCREEN.blit(obstacleObjs[i].image, obstacleObjs[i].get_rect())
         
         cam_x += CAM_X_INCREMENT
         frame_count += 1
@@ -539,6 +563,10 @@ def startScreen():
     titleRect.top = topCoord
     titleRect.centerx = HALF_WINWIDTH
     topCoord += titleRect.height
+    
+    pygame.mixer.init()
+
+    pygame.mixer.music.load('Sounds/Menu.mp3')
 
 
 
@@ -559,6 +587,8 @@ def startScreen():
 
     pygame.key.set_repeat(199,69)#(delay,interval)
     pygame.display.update()
+    pygame.mixer.music.play(0)
+    #sound.play()
     while 1:
         for event in pygame.event.get():
             if event.type == KEYDOWN:
@@ -584,6 +614,42 @@ def startScreen():
         pygame.time.wait(8)
 
 
+def check_game_end(player, step_x, step_y, coll_layer):
+    isColliding = False
+    # find the tile location of the player
+    tile_x_left = int((player.get_rect().left) // coll_layer.tilewidth)
+    tile_x_right = int((player.get_rect().right) // coll_layer.tilewidth)
+    tile_y_bottom = int((player.get_rect().bottom) // coll_layer.tileheight)
+    tile_y_top = int((player.get_rect().top) // coll_layer.tileheight)
+
+    # Create local player rect to work with
+    rect = player.get_rect()
+    # find the tiles around the hero and extract their rects for collision
+    tile_rects = []
+    for tile_x in (tile_x_left,tile_x_right):
+        for tile_y in (tile_y_top, tile_y_bottom):
+            for diry in (-1,0, 1):
+                for dirx in (-1,0,1):
+                    if coll_layer.content2D[tile_y + diry][tile_x + dirx] is not None:
+                        tile_rects.append(coll_layer.content2D[tile_y + diry][tile_x + dirx].rect)
+                    if coll_layer.content2D[tile_y + diry][tile_x + dirx] is not None:
+                        tile_rects.append(coll_layer.content2D[tile_y+ diry][tile_x + dirx].rect)
+
+    step_x  = special_round(step_x)
+    if step_x != 0 and rect.move(step_x, 0).collidelist(tile_rects) > -1:
+        isColliding = True
+
+    # reset player rect
+    rect = player.get_rect()
+    # y direction, floor or ceil depending on the sign of the step
+    step_y = special_round(step_y)
+
+    # detect a collision and dont move in y direction if colliding
+    if step_y != 0 and rect.move(0, step_y).collidelist(tile_rects) > -1:
+        isColliding = True
+
+    # return the step the hero should do
+    return isColliding
 
 def check_collision(player,step_x,step_y,coll_layer):
     # find the tile location of the player
