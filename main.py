@@ -412,7 +412,8 @@ def runGame(MAP_NUMBER):
             print 'Collided with death layer'
         elif check_game_end(p,step_x,step_y,sprite_layers[WIN_LAYER]):
             print 'Collided with win layer'
-
+        elif p.get_rect().left <= (cam_x-HALF_WINWIDTH):
+            print 'Collided with left end of screen'
         step_x, step_y = check_collision(p,step_x,step_y,sprite_layers[COLL_LAYER])
 
 
@@ -428,7 +429,6 @@ def runGame(MAP_NUMBER):
 
         # Draw the background
         SCREEN.fill((0, 0, 0))
-
 
         # render the map including the player
         for sprite_layer in sprite_layers:
